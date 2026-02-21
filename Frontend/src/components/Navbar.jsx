@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import login from "../pages/Login";
+import signup from "../pages/signup"
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -55,7 +57,8 @@ export default function Navbar() {
           onClick={() => navigate("/login")}>
             Login
           </button>
-          <button className="rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl">
+          <button className="rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+           onClick={() => navigate("/signup")}>
             Sign Up
           </button>
         </div>
@@ -106,7 +109,7 @@ export default function Navbar() {
               <button className="flex-1 rounded-full border-2 border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:bg-blue-600 hover:text-[#ffffff]">
                 Login
               </button>
-              <button className="flex-1 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:shadow-xl">
+              <button className="flex-1 rounded-full bg-gradient-to-red from-blue-600 to-purple-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:shadow-xl">
                 Sign Up
               </button>
             </div>
