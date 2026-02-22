@@ -4,41 +4,52 @@ import ModuleCard from "../components/ModuleCard";
 import needvswant from "../assets/images/needs-vs-wants.jpg"
 import savingmoney from "../assets/images/saving-money.jpg"
 import budgettingbasics from "../assets/images/budgeting-basics.jpg"
-
-const allModules = [
-  {
-    title: "Needs vs Wants",
-    description:
-      "Can you tell the difference between what you NEED and what you WANT? Play our drag-and-drop game and test your knowledge with a fun quiz!",
-    image: needvswant,
-    href: "/modules/needs-vs-wants",
-    color: "#8B5CF6",
-    emoji: "🎯",
-    status: "Available",
-  },
-  {
-    title: "Saving Money",
-    description:
-      "Discover the magic of saving! Learn awesome strategies to grow your money and reach your goals faster than you ever imagined!",
-    image: savingmoney,
-    href: "/modules",
-    color: "#22C55E",
-    emoji: "💰",
-    status: "Coming Soon",
-  },
-  {
-    title: "Budgeting Basics",
-    description:
-      "Become a budget boss! Learn how to plan your spending, track your money, and make every dollar count!",
-    image: budgettingbasics,
-    href: "/modules",
-    color: "#F97316",
-    emoji: "📊",
-    status: "Coming Soon",
-  },
-];
+import { supabase } from "../supabaseClient.js";
+import { useState, useEffect } from "react";
 
 export default function Modules() {
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  }, []);
+
+  const allModules = [
+    {
+      title: "Needs vs Wants",
+      description:
+        "Can you tell the difference between what you NEED and what you WANT? Play our drag-and-drop game and test your knowledge with a fun quiz!",
+      image: needvswant,
+      href: user ? "/modules/needs-vs-wants" : "/login",
+      color: "#8B5CF6",
+      emoji: "🎯",
+      status: "Available",
+    },
+    {
+      title: "Saving Money",
+      description:
+        "Discover the magic of saving! Learn awesome strategies to grow your money and reach your goals faster than you ever imagined!",
+      image: savingmoney,
+      href: user ? "/modules" : "/login",
+      color: "#22C55E",
+      emoji: "💰",
+      status: "Coming Soon",
+    },
+    {
+      title: "Budgeting Basics",
+      description:
+        "Become a budget boss! Learn how to plan your spending, track your money, and make every dollar count!",
+      image: budgettingbasics,
+      href: user ? "/modules" : "/login",
+      color: "#F97316",
+      emoji: "📊",
+      status: "Coming Soon",
+    },
+  ];
+
   return (
     <main className="min-h-screen">
       <Navbar />
@@ -104,7 +115,7 @@ export default function Modules() {
                 <div
                   className={
                     mod.status === "Coming Soon"
-                      ? "pointer-events-none opacity-70"
+                      ? "opacity-70"
                       : ""
                   }
                 >

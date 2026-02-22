@@ -1,13 +1,26 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import login from "../pages/Login";
-import signup from "../pages/signup"
+import { supabase } from "../supabaseClient.js";
+import { toast } from "sonner";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    toast.success("Logged out successfully!");
+    setUser(null);
+  };
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+  },[]);
 
   return (
     <nav className="sticky top-0 z-50 bg-[#ffffff]/90 backdrop-blur-md shadow-sm">
@@ -53,14 +66,29 @@ export default function Navbar() {
 
         {/* Auth Buttons */}
         <div className="hidden items-center gap-3 lg:flex">
-          <button className="rounded-full border-2 border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
-          onClick={() => navigate("/login")}>
-            Login
-          </button>
-          <button className="rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-           onClick={() => navigate("/signup")}>
-            Sign Up
-          </button>
+          {!user ? (
+            <div className="flex items-center gap-3">
+              <button
+                className="rounded-full border-2 border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </button>
+              <button
+                className="rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                onClick={() => navigate("/signup")}
+              >
+                Sign Up
+              </button>
+            </div>
+          ) : (
+            <button
+              className="rounded-full border-2 justify-self-end border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
+              onClick={() => handleLogout()}
+            >
+              Logout
+            </button>
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -106,12 +134,29 @@ export default function Navbar() {
               Contact
             </a>
             <div className="mt-2 flex gap-3">
-              <button className="flex-1 rounded-full border-2 border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:bg-blue-600 hover:text-[#ffffff]">
-                Login
-              </button>
-              <button className="flex-1 rounded-full bg-gradient-to-red from-blue-600 to-purple-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:shadow-xl">
-                Sign Up
-              </button>
+              {!user ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    className="rounded-full border-2 border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
+                    onClick={() => navigate("/login")}
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="flex-1 rounded-full bg-linear-to-r from-blue-600 to-purple-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:shadow-xl"
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="rounded-full border-2 border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
+                  onClick={() => handleLogout()}
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>

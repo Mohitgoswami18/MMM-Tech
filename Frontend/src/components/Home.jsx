@@ -1,32 +1,13 @@
 import { Link } from "react-router-dom";
 import Footer from "./Footer.jsx"
 import Navbar from "./Navbar.jsx";
+import { useState, useEffect } from "react";
 import ModuleCard from "./ModuleCard";
+import { supabase } from "../supabaseClient.js";
 import needsvswants from "../assets/images/needs-vs-wants.jpg";
 import budgetingbasics from "../assets/images/budgeting-basics.jpg";
 import herokid from "../assets/images/hero-kids.jpg";
 import { Gamepad2, Brain, Trophy, TrendingUp } from "lucide-react";
-
-const modules = [
-  {
-    title: "Needs vs Wants",
-    description:
-      "Can you tell the difference between what you NEED and what you WANT? Play the drag-and-drop game and find out!",
-    image: needsvswants,
-    href: "/modules/needs-vs-wants",
-    color: "#8B5CF6",
-    emoji: "\uD83C\uDFAF",
-  },
-  {
-    title: "Budgeting Basics",
-    description:
-      "Become a budget boss! Learn how to plan your spending and make your money work for you!",
-    image: budgetingbasics,
-    href: "/modules",
-    color: "#F97316",
-    emoji: "\uD83D\uDCCA",
-  },
-];
 
 const values = [
   {
@@ -62,6 +43,35 @@ const values = [
 ];
 
 export default function Home() {
+
+  const [user, setUser] = useState(null);
+  const modules = [
+    {
+      title: "Needs vs Wants",
+      description:
+        "Can you tell the difference between what you NEED and what you WANT? Play the drag-and-drop game and find out!",
+      image: needsvswants,
+      href: user ? "/modules/needs-vs-wants" : "/login",
+      color: "#8B5CF6",
+      emoji: "\uD83C\uDFAF",
+    },
+    {
+      title: "Budgeting Basics",
+      description:
+        "Become a budget boss! Learn how to plan your spending and make your money work for you!",
+      image: budgetingbasics,
+      href: user ? "/modules" : "/login",
+      color: "#F97316",
+      emoji: "\uD83D\uDCCA",
+    },
+  ];
+
+  useEffect(() => {
+      supabase.auth.getUser().then(({ data }) => {
+        setUser(data.user);
+      });
+    },[]);
+
   return (
     <main className="min-h-screen">
       <Navbar />
