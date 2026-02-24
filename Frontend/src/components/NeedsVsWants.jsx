@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { useState, useCallback } from "react";
+import { useState, useCallback ,useEffect ,useRef } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import badge from "../assets/images/badge-star.jpg";
 import needsvswants from "../assets/images/needs-vs-wants.jpg";
+import saveModuleProgress from "../utils/progress";
 
 const DRAG_ITEMS = [
   { id: "food", emoji: "\uD83C\uDF4E", label: "Food", answer: "need" },
@@ -59,7 +60,7 @@ const QUIZ_QUESTIONS = [
   },
 ];
 
-function DragDropGame() {
+function DragDropGame({onGameComplete}) {
   const [remaining, setRemaining] = useState([...DRAG_ITEMS]);
   const [needBox, setNeedBox] = useState([]);
   const [wantBox, setWantBox] = useState([]);
@@ -86,9 +87,12 @@ function DragDropGame() {
         } else {
           setWantBox((prev) => [...prev, item]);
         }
-        if (newRemaining.length === 0) {
-          setTimeout(() => setGameComplete(true), 800);
-        }
+      if (newRemaining.length === 0) {
+  setTimeout(() => {
+    setGameComplete(true);
+    onGameComplete();   // 🔥 notify parent
+  }, 800);
+}
       } else {
         setFeedback({ message: "Oops! Try again!", correct: false });
       }
@@ -293,20 +297,35 @@ function DragDropGame() {
 }
 
 
-function NeedsVsWantsQuiz() {
+
+function NeedsVsWantsQuiz({ onQuizPass }) {
   const [currentQ, setCurrentQ] = useState(0);
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showResult, setShowResult] = useState(false);
   const [quizDone, setQuizDone] = useState(false);
+  const [passed, setPassed] = useState(false);
+
+  const quizPassCalled = useRef(false);
+
+  // 🔧 Call `onQuizPass` once when the user has finished and achieved a passing score
+  useEffect(() => {
+    if (quizDone && score >= 3 && !quizPassCalled.current) {
+      quizPassCalled.current = true;
+      onQuizPass();
+    }
+  }, [quizDone, score, onQuizPass]);
 
   const handleAnswer = (index) => {
     if (selected !== null) return;
+
     setSelected(index);
-    const isCorrect = index === QUIZ_QUESTIONS[currentQ].correctIndex;
-    if (isCorrect) setScore((s) => s + 1);
+    if (index === QUIZ_QUESTIONS[currentQ].correctIndex) {
+      setScore((s) => s + 1);
+    }
 
     setShowResult(true);
+
     setTimeout(() => {
       if (currentQ < QUIZ_QUESTIONS.length - 1) {
         setCurrentQ((q) => q + 1);
@@ -324,17 +343,21 @@ function NeedsVsWantsQuiz() {
     setSelected(null);
     setShowResult(false);
     setQuizDone(false);
+    setPassed(false);
+    quizPassCalled.current = false; // 🔧 allow user to re-earn pass after reset
   };
 
+  // 🔧 Show final result screen when quiz is done, otherwise keep showing questions
   if (quizDone) {
-    const passed = score >= 3;
+    const didPass = score >= 3;
+
     return (
       <div className="flex flex-col items-center gap-6 rounded-3xl bg-linear-to-br from-[#FDE047]/20 to-[#8B5CF6]/20 p-8 text-center">
         <div className="text-6xl">
-          {passed ? "\uD83C\uDF89" : "\uD83D\uDCAA"}
+          {didPass ? "\uD83C\uDF89" : "\uD83D\uDCAA"}
         </div>
         <h3 className="text-2xl font-extrabold text-foreground">
-          {passed
+          {didPass
             ? "Great Job! You're a Smart Saver!"
             : "Try Again to Become a Money Hero!"}
         </h3>
@@ -357,7 +380,7 @@ function NeedsVsWantsQuiz() {
           onClick={resetQuiz}
           className="rounded-full bg-linear-to-r from-blue-600 to-purple-600 px-8 py-3 font-bold text-[#ffffff] transition-all hover:scale-105"
         >
-          {passed ? "Play Again" : "Try Again"}
+          {didPass ? "Play Again" : "Try Again"}
         </button>
       </div>
     );
@@ -444,6 +467,7 @@ function NeedsVsWantsQuiz() {
   );
 }
 
+
 /* ===========================
    COMPLETION BADGE COMPONENT
    =========================== */
@@ -474,8 +498,23 @@ function CompletionBadge() {
   );
 }
 
+
+
+
 export default function NeedsVsWants() {
   const [activeTab, setActiveTab] = useState("intro");
+  const [gameCompleted, setGameCompleted] = useState(false);
+  const [quizPassed, setQuizPassed] = useState(false);
+  const [progressSaved, setProgressSaved] = useState(false); // 🔧 track whether we've already saved progress
+
+  // 🔧 When both game and quiz are completed for the first time, store progress in Supabase
+  useEffect(() => {
+    if (gameCompleted && quizPassed && !progressSaved) {
+      saveModuleProgress("needs-vs-wants");
+      setProgressSaved(true);
+    }
+  }, [gameCompleted, quizPassed, progressSaved]);
+
 
   const tabs = [
     { id: "intro", label: "Learn", emoji: "\uD83D\uDCDA" },
@@ -629,7 +668,7 @@ export default function NeedsVsWants() {
                   Sort each item into the correct category. Is it a NEED or a
                   WANT?
                 </p>
-                <DragDropGame />
+               <DragDropGame onGameComplete={() => setGameCompleted(true)} />
               </div>
 
               <div className="flex justify-center">
@@ -654,7 +693,9 @@ export default function NeedsVsWants() {
                   Answer 5 questions to test what you{"'"}ve learned. Score 3 or
                   more to pass!
                 </p>
-                <NeedsVsWantsQuiz />
+                {/* 🔧 Fix prop name so quiz can notify parent when passed */}
+                <NeedsVsWantsQuiz onQuizPass={() => setQuizPassed(true)} />
+                
               </div>
 
               <div className="flex justify-center">

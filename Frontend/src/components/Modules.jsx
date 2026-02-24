@@ -19,6 +19,7 @@ export default function Modules() {
 
   const allModules = [
     {
+      id:"Need-vs-Wants",
       title: "Needs vs Wants",
       description:
         "Can you tell the difference between what you NEED and what you WANT? Play our drag-and-drop game and test your knowledge with a fun quiz!",
@@ -29,6 +30,7 @@ export default function Modules() {
       status: "Available",
     },
     {
+      id:"Saving-Money",
       title: "Saving Money",
       description:
         "Discover the magic of saving! Learn awesome strategies to grow your money and reach your goals faster than you ever imagined!",
@@ -39,6 +41,7 @@ export default function Modules() {
       status: "Coming Soon",
     },
     {
+      id:"Budgeting-Basics",
       title: "Budgeting Basics",
       description:
         "Become a budget boss! Learn how to plan your spending, track your money, and make every dollar count!",

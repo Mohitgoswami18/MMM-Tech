@@ -45,6 +45,7 @@ function Signup() {
 
     if (error) {
       setError("Oops! Something went wrong.");
+      console.log(error);
       return;
     }
 
