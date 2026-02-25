@@ -2,32 +2,49 @@ import { supabase } from "../supabaseClient";
 
 export default async function saveModuleProgress(moduleId) {
   console.log("inside progress ");
-  console.log(moduleId);
+  console.log("Saving module progress for id:", moduleId); // 🔧 clearer log
 
-  // 🔧 Get logged-in user before writing progress
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  try {
+    // 🔧 Get logged-in user before writing progress
+    const { data: authData, error: authError } =
+      await supabase.auth.getUser();
 
-  if (authError || !authData?.user) {
-    console.log("User not authenticated");
-    return;
+    if (authError || !authData?.user) {
+      console.log("User not authenticated", authError); // 🔧 log auth error details
+      return;
+    }
+
+    const user = authData.user;
+
+    // 🔧 Use INSERT (as requested) to create a new progress row
+    const { data, error } = await supabase
+      .from("module_progress")
+      .insert({
+        user_id: user.id,
+        module_id: moduleId,
+        email:email,
+        completed: true,
+        completed_at: new Date().toISOString(),
+      })
+      .select("*"); // 🔧 force Supabase to return the inserted row(s)
+
+    console.log("Inserted progress rows:", data);
+
+    if (error) {
+      console.error("Error saving progress (insert):", error);
+    }
+  } catch (e) {
+    console.error("Unexpected error in saveModuleProgress:", e); // 🔧 catch any runtime issues
   }
+}
 
-  const user = authData.user;
-
-  // 🔧 Capture both `data` and `error` so we can log the insert result correctly
+export async function fetchCompletedModules(userId) {
   const { data, error } = await supabase
     .from("module_progress")
-    .insert({
-      user_id: user.id,
-      module_id: moduleId,
-      completed: true,
-      completed_at: new Date(),
-    });
+    .select("module_id")
+    .eq("user_id", userId)
+    .eq("completed", true);
 
-  console.log("Insert result:", data);
-  console.log("Insert error:", error);
-
-  if (error) {
-    console.error("Error saving progress:", error.message);
-  }
+  if (error) throw error;
+  return data;
 }
