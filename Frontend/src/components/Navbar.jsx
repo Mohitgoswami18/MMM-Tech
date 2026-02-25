@@ -82,12 +82,20 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <button
-              className="rounded-full border-2 justify-self-end border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
-              onClick={() => handleLogout()}
-            >
-              Logout
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                className="rounded-full border-2 justify-self-end border-blue-600 px-5 py-2 text-sm font-bold text-blue-600 transition-all hover:scale-105 hover:bg-blue-600 hover:text-[#ffffff]"
+                onClick={() => handleLogout()}
+              >
+                Logout
+              </button>
+              <button
+                className="rounded-full bg-linear-to-r from-blue-600 to-indigo-600 px-5 py-2 text-sm font-bold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                onClick={() => navigate("/profile")}
+              >
+                Profile
+              </button>
+            </div>
           )}
         </div>
 
