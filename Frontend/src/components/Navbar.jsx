@@ -97,7 +97,6 @@ export default function Navbar() {
               </button>
             </div>
           )}
-         
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -141,6 +140,13 @@ export default function Navbar() {
               className="rounded-xl px-4 py-3 text-base font-bold text-foreground transition-colors hover:bg-orange-600/10"
             >
               Contact
+            </a>
+            <a
+              href="/profile"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-xl px-4 py-3 text-base font-bold text-foreground transition-colors hover:bg-orange-600/10"
+            >
+              Profile
             </a>
             <div className="mt-2 flex gap-3">
               {!user ? (

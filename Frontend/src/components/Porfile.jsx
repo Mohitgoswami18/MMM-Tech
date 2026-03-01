@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 import Avatar from "react-avatar";
+import { toast } from "sonner";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -33,6 +34,8 @@ export default function Profile() {
 
     loadProfile();
   }, []);
+
+  console.log(completedModules);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -159,8 +162,8 @@ export default function Profile() {
                   🚀 Remaining Modules
                 </p>
                 <p className="text-5xl font-bold text-purple-600">
-                  {4 - completedModules.length > 0
-                    ? 4 - completedModules.length
+                  {2 - completedModules.length > 0
+                    ? 2 - completedModules.length
                     : 0}
                 </p>
               </div>

@@ -127,7 +127,10 @@ export default function Home() {
               />
             </div>
             {/* Floating badges */}
-            <div className="absolute -left-4 top-8 float rounded-2xl bg-[#ffffff] px-4 py-2 shadow-lg">
+            <div
+              style={{ animationDelay: "1s" }}
+              className="absolute -left-4 top-8 float rounded-2xl bg-[#ffffff] px-4 py-2 shadow-lg"
+            >
               <span className="text-lg font-bold text-[#22C55E]">
                 {"\uD83C\uDFC6"} +50 XP
               </span>
@@ -192,8 +195,7 @@ export default function Home() {
       <section className="bg-linear-to-br from-[#EFF6FF] to-[#F5F3FF] px-4 py-16 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
           <h2 className="mb-12 text-center text-3xl font-extrabold text-foreground md:text-4xl">
-            What Makes Us{" "}
-            <span className="text-orange-600">Awesome</span>?{" "}
+            What Makes Us <span className="text-orange-600">Awesome</span>?{" "}
             {"\uD83D\uDE0E"}
           </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
