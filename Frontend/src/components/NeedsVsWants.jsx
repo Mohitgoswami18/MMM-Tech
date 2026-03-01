@@ -233,11 +233,11 @@ function DragDropGame({onGameComplete}) {
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop("need")}
               onClick={() => handleTouchDrop("need")}
-              className="flex min-h-45 flex-col items-center gap-3 rounded-3xl border-4 border-dashed border-green-600 bg-green-600/5 p-6 transition-all hover:bg-green-600/10"
+              className="flex min-h-45 flex-col items-center gap-3 rounded-3xl border-4 border-dashed border-[#00796B] bg-[#00796B]/5 p-6 transition-all hover:bg-[#00796B]/10"
             >
               <div className="flex items-center gap-2">
                 <span className="text-3xl">{"\uD83D\uDC9A"}</span>
-                <span className="text-2xl font-extrabold text-green-600">
+                <span className="text-2xl font-extrabold text-[#00796B]">
                   NEED
                 </span>
               </div>
@@ -261,11 +261,11 @@ function DragDropGame({onGameComplete}) {
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => handleDrop("want")}
               onClick={() => handleTouchDrop("want")}
-              className="flex min-h-45 flex-col items-center gap-3 rounded-3xl border-4 border-dashed border-purple-600 bg-purple-600/5 p-6 transition-all hover:bg-purple-600/10"
+              className="flex min-h-45 flex-col items-center gap-3 rounded-3xl border-4 border-dashed border-[#FFC107] bg-[#FFC107]/5 p-6 transition-all hover:bg-[#FFC107]/10"
             >
               <div className="flex items-center gap-2">
                 <span className="text-3xl">{"\uD83D\uDC9C"}</span>
-                <span className="text-2xl font-extrabold text-purple-600">
+                <span className="text-2xl font-extrabold text-[#FFC107]">
                   WANT
                 </span>
               </div>
@@ -276,7 +276,7 @@ function DragDropGame({onGameComplete}) {
                 {wantBox.map((item) => (
                   <span
                     key={item.id}
-                    className="animate-pop rounded-xl bg-purple-600/20 px-3 py-2 text-sm font-bold text-purple-600"
+                    className="animate-pop rounded-xl bg-[#FFC107]/20 px-3 py-2 text-sm font-bold text-[#FFC107]"
                   >
                     {item.emoji} {item.label}
                   </span>
@@ -401,7 +401,7 @@ function NeedsVsWantsQuiz({ onQuizPass }) {
       </div>
       <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-linear-to-r from-blue-600 to-purple-600 transition-all duration-500"
+          className="h-full rounded-full bg-[#00796B] transition-all duration-500"
           style={{
             width: `${((currentQ + 1) / QUIZ_QUESTIONS.length) * 100}%`,
           }}
@@ -528,7 +528,7 @@ export default function NeedsVsWants() {
       <Navbar />
 
       {/* Header */}
-      <section className="bg-linear-to-br from-[#8B5CF6] via-[#6366F1] to-[#3B82F6] px-4 py-12 lg:px-8 lg:py-16">
+      <section className="px-4 py-12 lg:px-8 lg:py-16 bg-[#00796B]">
         <div className="mx-auto max-w-4xl">
           <Link
             to="/modules"
@@ -570,7 +570,7 @@ export default function NeedsVsWants() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 border-b-4 px-6 py-4 text-sm font-bold transition-all ${
                 activeTab === tab.id
-                  ? "border-purple-600 text-purple-600"
+                  ? "border-[#00796B] text-[#00796B]"
                   : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
               }`}
             >
@@ -597,20 +597,20 @@ export default function NeedsVsWants() {
                     not everything we buy is equally important?
                   </p>
                   <p>
-                    <span className="font-bold text-green-600">Needs</span> are
+                    <span className="font-bold text-[#00796B]">Needs</span> are
                     things you MUST have to survive and stay healthy. Things
                     like food, water, shelter, clothes, and medicine are all
                     needs. Without them, life would be really tough!
                   </p>
                   <p>
-                    <span className="font-bold text-purple-600">Wants</span> are
+                    <span className="font-bold text-[#FFC107]">Wants</span> are
                     things that are nice to have but you can live without them.
                     Toys, video games, ice cream, and fancy sneakers are all
                     wants. They make life fun, but they{"'"}re not essential!
                   </p>
                   <p>
                     Learning to tell the difference helps you make{" "}
-                    <span className="font-bold text-blue-600">
+                    <span className="font-bold text-[#00796B]">
                       smart money choices
                     </span>
                     . When you know what you truly need vs what you just want,
@@ -620,8 +620,8 @@ export default function NeedsVsWants() {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-3xl border-2 border-green-600 bg-green-600/5 p-6">
-                  <h3 className="mb-3 flex items-center gap-2 text-xl font-extrabold text-green-600">
+                <div className="rounded-3xl border-2 border-[#00796B] bg-green-600/5 p-6">
+                  <h3 className="mb-3 flex items-center gap-2 text-xl font-extrabold text-[#00796B]">
                     {"\uD83D\uDC9A"} Examples of Needs
                   </h3>
                   <ul className="flex flex-col gap-2 text-base text-foreground">
@@ -632,9 +632,9 @@ export default function NeedsVsWants() {
                     <li>{"\uD83D\uDCDA"} Education and books</li>
                   </ul>
                 </div>
-                <div className="rounded-3xl border-2 border-purple-600 bg-purple-600/5 p-6">
-                  <h3 className="mb-3 flex items-center gap-2 text-xl font-extrabold text-purple-600">
-                    {"\uD83D\uDC9C"} Examples of Wants
+                <div className="rounded-3xl border-2 border-[#FFC107] bg-purple-600/5 p-6">
+                  <h3 className="mb-3 flex items-center gap-2 text-xl font-extrabold text-[#FFC107]">
+                    💛 Examples of Wants
                   </h3>
                   <ul className="flex flex-col gap-2 text-base text-foreground">
                     <li>{"\uD83C\uDFAE"} Video games</li>
@@ -649,7 +649,7 @@ export default function NeedsVsWants() {
               <div className="flex justify-center">
                 <button
                   onClick={() => setActiveTab("game")}
-                  className="rounded-full bg-linear-to-r from-blue-600 to-purple-600 px-10 py-4 text-lg font-extrabold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  className="rounded-full bg-[#00796B] px-10 py-4 text-lg font-extrabold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   {"\uD83C\uDFAE"} Ready to Play? Let{"'"}s Go!
                 </button>
@@ -668,13 +668,13 @@ export default function NeedsVsWants() {
                   Sort each item into the correct category. Is it a NEED or a
                   WANT?
                 </p>
-               <DragDropGame onGameComplete={() => setGameCompleted(true)} />
+                <DragDropGame onGameComplete={() => setGameCompleted(true)} />
               </div>
 
               <div className="flex justify-center">
                 <button
                   onClick={() => setActiveTab("quiz")}
-                  className="rounded-full bg-linear-to-r from-green-600 to-blue-600 px-10 py-4 text-lg font-extrabold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  className="rounded-full bg-[#00796B] px-10 py-4 text-lg font-extrabold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   {"\uD83E\uDDE0"} Take the Quiz Next!
                 </button>
@@ -695,13 +695,12 @@ export default function NeedsVsWants() {
                 </p>
                 {/* 🔧 Fix prop name so quiz can notify parent when passed */}
                 <NeedsVsWantsQuiz onQuizPass={() => setQuizPassed(true)} />
-                
               </div>
 
               <div className="flex justify-center">
                 <button
                   onClick={() => setActiveTab("badge")}
-                  className="rounded-full bg-linear-to-r from-orange-600 to-yellow-600 px-10 py-4 text-lg font-extrabold text-[#1e1b4b] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                  className="rounded-full bg-[#00796B] px-10 py-4 text-lg font-extrabold text-[#FFC107] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   {"\uD83C\uDFC6"} See Your Badge!
                 </button>
@@ -717,13 +716,13 @@ export default function NeedsVsWants() {
               <div className="flex flex-wrap justify-center gap-4">
                 <Link
                   to="/modules"
-                  className="rounded-full bg-linear-to-r from-blue-600 to-purple-600 px-8 py-3 font-bold text-[#ffffff] transition-all hover:scale-105"
+                  className="rounded-full bg-[#00796B] px-8 py-3 font-bold text-[#ffffff] transition-all hover:scale-105"
                 >
                   {"\uD83D\uDDFA\uFE0F"} More Modules
                 </Link>
                 <button
                   onClick={() => setActiveTab("game")}
-                  className="rounded-full border-2 border-purple-600 px-8 py-3 font-bold text-purple-600 transition-all hover:bg-purple-600/5 hover:scale-105"
+                  className="rounded-full border-2 border-[#00796B] px-8 py-3 font-bold text-[#00796B] transition-all hover:bg-[#00796B]/5 hover:scale-105"
                 >
                   {"\uD83D\uDD04"} Replay Game
                 </button>
@@ -732,8 +731,6 @@ export default function NeedsVsWants() {
           )}
         </div>
       </section>
-
-      <Footer />
     </main>
   );
 }

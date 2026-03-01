@@ -13,7 +13,7 @@ export default function ModuleCard({
 
   return (
     <div
-      className="group flex flex-col overflow-hidden rounded-3xl bg-card shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
+      className="group flex flex-col overflow-hidden rounded-3xl shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
       style={{ borderTop: `4px solid ${color}` }}
     >
       {/* Image */}
