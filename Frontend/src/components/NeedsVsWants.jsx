@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
-import { useState, useCallback ,useEffect ,useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import badge from "../assets/images/badge-star.jpg";
 import needsvswants from "../assets/images/needs-vs-wants.jpg";
 import saveModuleProgress from "../utils/progress";
+import { Button } from "@/components/ui/button";
 
 const DRAG_ITEMS = [
   { id: "food", emoji: "\uD83C\uDF4E", label: "Food", answer: "need" },
@@ -60,7 +60,7 @@ const QUIZ_QUESTIONS = [
   },
 ];
 
-function DragDropGame({onGameComplete}) {
+function DragDropGame({ onGameComplete }) {
   const [remaining, setRemaining] = useState([...DRAG_ITEMS]);
   const [needBox, setNeedBox] = useState([]);
   const [wantBox, setWantBox] = useState([]);
@@ -87,12 +87,12 @@ function DragDropGame({onGameComplete}) {
         } else {
           setWantBox((prev) => [...prev, item]);
         }
-      if (newRemaining.length === 0) {
-  setTimeout(() => {
-    setGameComplete(true);
-    onGameComplete();   // 🔥 notify parent
-  }, 800);
-}
+        if (newRemaining.length === 0) {
+          setTimeout(() => {
+            setGameComplete(true);
+            onGameComplete(); // 🔥 notify parent
+          }, 800);
+        }
       } else {
         setFeedback({ message: "Oops! Try again!", correct: false });
       }
@@ -296,8 +296,6 @@ function DragDropGame({onGameComplete}) {
   );
 }
 
-
-
 function NeedsVsWantsQuiz({ onQuizPass }) {
   const [currentQ, setCurrentQ] = useState(0);
   const [score, setScore] = useState(0);
@@ -369,9 +367,7 @@ function NeedsVsWantsQuiz({ onQuizPass }) {
             <div
               key={i}
               className={`h-4 w-4 rounded-full ${
-                i < score
-                  ? "bg-green-600"
-                  : "bg-orange-600/30"
+                i < score ? "bg-green-600" : "bg-orange-600/30"
               }`}
             />
           ))}
@@ -467,11 +463,6 @@ function NeedsVsWantsQuiz({ onQuizPass }) {
   );
 }
 
-
-/* ===========================
-   COMPLETION BADGE COMPONENT
-   =========================== */
-
 function CompletionBadge() {
   return (
     <div className="flex flex-col items-center gap-4 rounded-3xl bg-linear-to-br from-[#FDE047]/30 via-[#F97316]/20 to-[#22C55E]/30 p-8 text-center">
@@ -498,16 +489,13 @@ function CompletionBadge() {
   );
 }
 
-
-
-
 export default function NeedsVsWants() {
   const [activeTab, setActiveTab] = useState("intro");
   const [gameCompleted, setGameCompleted] = useState(false);
   const [quizPassed, setQuizPassed] = useState(false);
-  const [progressSaved, setProgressSaved] = useState(false); // 🔧 track whether we've already saved progress
+  const [progressSaved, setProgressSaved] = useState(false);
 
-  // 🔧 When both game and quiz are completed for the first time, store progress in Supabase
+
   useEffect(() => {
     if (gameCompleted && quizPassed && !progressSaved) {
       saveModuleProgress("needs-vs-wants");
@@ -515,13 +503,132 @@ export default function NeedsVsWants() {
     }
   }, [gameCompleted, quizPassed, progressSaved]);
 
-
   const tabs = [
     { id: "intro", label: "Learn", emoji: "\uD83D\uDCDA" },
     { id: "game", label: "Play", emoji: "\uD83C\uDFAE" },
     { id: "quiz", label: "Quiz", emoji: "\uD83E\uDDE0" },
     { id: "badge", label: "Badge", emoji: "\uD83C\uDFC6" },
   ];
+
+   const slides = [
+     {
+       id: 1,
+       title: "Introduction",
+       emoji: "🎯",
+       explanation:
+         "Today, we're going on a small adventure to the market with MIMO! Along the way, we'll discover which things are NEEDS and which are WANTS. Knowing the difference helps you make smart money choices.",
+       ninoMessage: "Hi there! I'm MIMO 🐻 Ready to become a money-smart hero?",
+       type: "intro",
+     },
+
+     {
+       id: 2,
+       title: "The Hungry Morning",
+       emoji: "🍳",
+       explanation:
+         "One morning, Aarav wakes up feeling very hungry. He needs breakfast to have energy for school. Without food, he would feel tired and weak. Food gives our body strength and keeps us healthy.",
+       ninoMessage:
+         "Food keeps us strong and ready to learn! That sounds important, right?",
+       type: "need",
+     },
+
+     {
+       id: 3,
+       title: "New Video Game",
+       emoji: "🎮",
+       explanation:
+         "After school, Aarav sees a brand new video game in the store. It looks super fun and exciting! But even if he doesn't buy it, he can still live, study, and stay healthy without it.",
+       ninoMessage:
+         "Games are fun, but we can live without them. That makes it a WANT!",
+       type: "want",
+     },
+
+     {
+       id: 4,
+       title: "Rainy Day Surprise",
+       emoji: "☔",
+       explanation:
+         "Suddenly, it starts raining heavily! Aarav needs an umbrella or raincoat to stay dry and avoid getting sick. Staying protected from weather keeps us safe and healthy.",
+       ninoMessage: "Staying safe and healthy is always a NEED!",
+       type: "need",
+     },
+
+     {
+       id: 5,
+       title: "Colorful Sneakers",
+       emoji: "👟",
+       explanation:
+         "Aarav already has good shoes at home. But he sees colorful sneakers with flashing lights and really wants them! They look cool, but his old shoes still work perfectly fine.",
+       ninoMessage:
+         "If you already have something that works, the new one might just be a WANT!",
+       type: "want",
+     },
+
+     {
+       id: 6,
+       title: "Medicine Time",
+       emoji: "💊",
+       explanation:
+         "One evening, Aarav gets a fever. The doctor gives him medicine to help him feel better. Without medicine, he might stay sick longer.",
+       ninoMessage:
+         "Medicine helps us recover and stay healthy. That's definitely a NEED!",
+       type: "need",
+     },
+
+     {
+       id: 7,
+       title: "Ice Cream Treat",
+       emoji: "🍦",
+       explanation:
+         "On the way home, Aarav asks for ice cream. It tastes delicious and makes him happy, but skipping it won't harm his health or survival.",
+       ninoMessage:
+         "Ice cream is yummy, but it's not essential. That's a WANT!",
+       type: "want",
+     },
+
+     {
+       id: 8,
+       title: "Final Challenge",
+       emoji: "🧠",
+       explanation:
+         "Before we finish, remember: NEEDS help us survive and stay healthy. WANTS make life fun and exciting, but we can live without them. Now it's your turn to decide wisely!",
+       ninoMessage:
+         "You're doing amazing! Ready to test your smart money skills?",
+       type: "end",
+     },
+   ];
+
+
+   
+   const [currentSlide, setCurrentSlide] = useState(0);
+   const [selectedAnswer, setSelectedAnswer] = useState(null);
+   const [showFeedback, setShowFeedback] = useState(false);
+   
+   const slide = slides[currentSlide];
+   const isFirst = currentSlide === 0;
+   const isLast = currentSlide === slides.length - 1;
+  const goToNext = () => {
+    if (!isLast) {
+      setCurrentSlide((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+    }
+  };
+
+  const goToPrev = () => {
+    if (!isFirst) {
+      setCurrentSlide((prev) => prev - 1);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+    }
+  };
+
+  const handleAnswer = (answer) => {
+    setSelectedAnswer(answer);
+    setShowFeedback(true);
+  };
+
+  const isCorrect = selectedAnswer === "Need";
 
   return (
     <main className="min-h-screen">
@@ -562,7 +669,7 @@ export default function NeedsVsWants() {
       </section>
 
       {/* Tab Navigation */}
-      <section className="sticky top-15 z-40 bg-card shadow-sm">
+      <section className=" shadow-sm">
         <div className="mx-auto flex max-w-4xl overflow-x-auto px-4 lg:px-8">
           {tabs.map((tab) => (
             <button
@@ -582,77 +689,104 @@ export default function NeedsVsWants() {
       </section>
 
       {/* Content Area */}
-      <section className="bg-background px-4 py-10 lg:px-8 lg:py-16">
+      <section className="bg-background px-4 py-6 lg:px-8 lg:py-4">
         <div className="mx-auto max-w-4xl">
           {/* INTRO TAB */}
           {activeTab === "intro" && (
-            <div className="flex flex-col gap-8">
-              <div className="rounded-3xl bg-card p-8 shadow-md">
-                <h2 className="mb-4 text-2xl font-extrabold text-foreground">
-                  What Are Needs and Wants? {"\uD83E\uDD14"}
-                </h2>
-                <div className="flex flex-col gap-4 text-base leading-relaxed text-muted-foreground">
-                  <p>
-                    Every day, we use money to buy things. But did you know that
-                    not everything we buy is equally important?
-                  </p>
-                  <p>
-                    <span className="font-bold text-[#00796B]">Needs</span> are
-                    things you MUST have to survive and stay healthy. Things
-                    like food, water, shelter, clothes, and medicine are all
-                    needs. Without them, life would be really tough!
-                  </p>
-                  <p>
-                    <span className="font-bold text-[#FFC107]">Wants</span> are
-                    things that are nice to have but you can live without them.
-                    Toys, video games, ice cream, and fancy sneakers are all
-                    wants. They make life fun, but they{"'"}re not essential!
-                  </p>
-                  <p>
-                    Learning to tell the difference helps you make{" "}
-                    <span className="font-bold text-[#00796B]">
-                      smart money choices
-                    </span>
-                    . When you know what you truly need vs what you just want,
-                    you can save more and spend wisely!
-                  </p>
+            <div className="min-h-screen bg-linear-to-br from-sky-50 via-green-50 to-purple-50 p-3 md:p-4">
+              <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="mb-2">
+                  <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+                    Needs vs Wants
+                  </h1>
+                  <p className="text-lg text-slate-600">Learn with MIMO</p>
                 </div>
-              </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="rounded-3xl border-2 border-[#00796B] bg-green-600/5 p-6">
-                  <h3 className="mb-3 flex items-center gap-2 text-xl font-extrabold text-[#00796B]">
-                    {"\uD83D\uDC9A"} Examples of Needs
-                  </h3>
-                  <ul className="flex flex-col gap-2 text-base text-foreground">
-                    <li>{"\uD83C\uDF4E"} Healthy food and water</li>
-                    <li>{"\uD83C\uDFE0"} A safe place to live</li>
-                    <li>{"\uD83D\uDC55"} Clothes to wear</li>
-                    <li>{"\uD83D\uDC8A"} Medicine when sick</li>
-                    <li>{"\uD83D\uDCDA"} Education and books</li>
-                  </ul>
-                </div>
-                <div className="rounded-3xl border-2 border-[#FFC107] bg-purple-600/5 p-6">
-                  <h3 className="mb-3 flex items-center gap-2 text-xl font-extrabold text-[#FFC107]">
-                    💛 Examples of Wants
-                  </h3>
-                  <ul className="flex flex-col gap-2 text-base text-foreground">
-                    <li>{"\uD83C\uDFAE"} Video games</li>
-                    <li>{"\uD83C\uDF66"} Ice cream and candy</li>
-                    <li>{"\uD83E\uDDF8"} Toys and gadgets</li>
-                    <li>{"\uD83D\uDC5F"} Fancy sneakers</li>
-                    <li>{"\uD83C\uDFA4"} Concert tickets</li>
-                  </ul>
-                </div>
-              </div>
+                <div className="grid md:grid-cols-2 gap-8 items-start">
+                  {/* LEFT COLUMN - Mascot (pushed down slightly) */}
+                  <div className="flex flex-col items-center mt-10 md:mt-16">
+                    <div className="relative mb-6 animate-float">
+                      <div className="w-48 h-48 bg-amber-300 rounded-full shadow-xl flex items-center justify-center text-6xl">
+                        🐻
+                      </div>
+                    </div>
 
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setActiveTab("game")}
-                  className="rounded-full bg-[#00796B] px-10 py-4 text-lg font-extrabold text-[#ffffff] shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                >
-                  {"\uD83C\uDFAE"} Ready to Play? Let{"'"}s Go!
-                </button>
+                    <div className="relative w-full max-w-xs">
+                      <div className="bg-white rounded-2xl shadow-lg p-6 border">
+                        <p className="text-lg font-semibold text-slate-900 text-center">
+                          {slide.ninoMessage}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN - Content (starts from top) */}
+                  <div className="flex flex-col">
+                    <div className="bg-white rounded-3xl shadow-xl p-8">
+                      {/* Progress */}
+                      <div className="mb-6">
+                        <div className="flex justify-between text-sm mb-2">
+                          <span>
+                            Step {currentSlide + 1} of {slides.length}
+                          </span>
+                          <span>
+                            {Math.round(
+                              ((currentSlide + 1) / slides.length) * 100,
+                            )}
+                            %
+                          </span>
+                        </div>
+
+                        <div className="w-full bg-slate-200 rounded-full h-2">
+                          <div
+                            className="bg-teal-500 h-2 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${((currentSlide + 1) / slides.length) * 100}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Slide Content */}
+                      <div className="mb-6 text-6xl">{slide.emoji}</div>
+
+                      <h2 className="text-3xl font-bold mb-4">{slide.title}</h2>
+
+                      <p className="text-lg text-slate-700 mb-6">
+                        {slide.explanation}
+                      </p>
+
+                      
+
+                      {/* Navigation */}
+                      <div className="flex justify-between mt-8">
+                        <button
+                          onClick={goToPrev}
+                          disabled={isFirst}
+                          className="px-6 py-3 rounded-xl bg-[#FFC107] text-white disabled:bg-slate-300 transition hover:scale-105"
+                        >
+                          ⬅ Previous
+                        </button>
+                        {slide.type === "end" ? (
+                          <button
+                            onClick={() => setActiveTab("game")}
+                            className="px-6 py-3 rounded-xl bg-[#00796B] text-white disabled:bg-slate-300 transition hover:scale-105"
+                          >
+                            Start Game
+                          </button>
+                        ) : (
+                          <button
+                            onClick={goToNext}
+                            className="px-6 py-3 rounded-xl bg-[#00796B] text-white disabled:bg-slate-300 transition hover:scale-105"
+                          >
+                            Next ➡
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
