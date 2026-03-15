@@ -57,15 +57,15 @@ export default function Modules() {
       status: "Available",
     },
     {
-      id: "saving-money",
-      title: "Saving Money",
+      id: "Stock-Market",
+      title: "Stock Market Simulator",
       description:
-        "Discover the magic of saving! Learn awesome strategies to grow your money and reach your goals faster than you ever imagined!",
+        "Experience the thrill of the stock market! Start with $1,000 in virtual cash and trade 3 real companies. Can you make a profit?",
       image: savingmoney,
-      href: user ? "/modules" : "/login",
+      href: user ? "/modules/StockMarket" : "/login",
       color: "#22C55E",
       emoji: "💰",
-      status: "Coming Soon",
+      status: "Available",
     },
     {
       id: "budgeting-basics",

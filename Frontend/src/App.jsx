@@ -5,6 +5,7 @@ import NeedsVsWants from './components/NeedsVsWants';
 import Login from './pages/Login';
 import Signup from './pages/signup';
 import Profile from './components/Porfile.jsx'
+import StockSimulator from './components/StockSimulator.jsx';
 function App() {
   return (
     <Routes>
@@ -14,9 +15,13 @@ function App() {
         path="/modules/needs-vs-wants"
         element={<NeedsVsWants></NeedsVsWants>}
       ></Route>
-      <Route path='/login' element={<Login></Login>}></Route>
-     <Route path='/Signup' element={<Signup></Signup>}></Route>
-     <Route path='/profile' element={<Profile></Profile>}></Route>
+      <Route
+        path="/modules/StockMarket"
+        element={<StockSimulator></StockSimulator>}
+      ></Route>
+      <Route path="/login" element={<Login></Login>}></Route>
+      <Route path="/Signup" element={<Signup></Signup>}></Route>
+      <Route path="/profile" element={<Profile></Profile>}></Route>
     </Routes>
   );
 }
