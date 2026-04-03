@@ -1,44 +1,55 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import hi from "../assets/mascot/hi.png";
+import thinking from "../assets/mascot/thinking.png";
+import otherwise from "../assets/mascot/otherwise.png";
 
-const SLIDES = [
+const slides = [
   {
+    id: 1,
     title: "Welcome to the Stock Market!",
-    description:
+    explanation:
       "Companies grow by getting investments from people like you. When you invest, you become a part-owner!",
     emoji: "🏢",
-    mascotText: "Hi! I'm Nino! Ready to learn about investing?",
+    ninoMessage: "Hi! I'm Nino! Ready to learn about investing?",
+    type: "start",
   },
   {
+    id: 2,
     title: "What is a Stock?",
-    description:
+    explanation:
       "When you buy a stock, you own a small piece of a company. If the company does well, your piece becomes more valuable!",
     emoji: "📈",
-    mascotText: "A stock is like owning a tiny slice of a company pizza! 🍕",
+    ninoMessage: "A stock is like owning a tiny slice of a company pizza! 🍕",
+    type: "content",
   },
   {
+    id: 3,
     title: "Profit and Loss",
-    description:
+    explanation:
       "If the company grows and the stock price goes up, you can sell it for more money and make a profit! But prices can also go down.",
     emoji: "💰",
-    mascotText: "Buy low, sell high! That's the goal!",
+    ninoMessage: "Buy low, sell high! That's the goal!",
+    type: "content"
   },
   {
+    id: 4,
     title: "Let's Start Trading!",
-    description:
+    explanation:
       "You're about to start with $1,000 in virtual money. Trade 3 companies and see if you can make a profit. Good luck!",
     emoji: "🎯",
-    mascotText: "You've got this! Let's go to the trading game!",
+    ninoMessage: "You've got this! Let's go to the trading game!",
+    type: "end"
   },
 ];
 
 export default function StoryIntro({ onComplete }) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const slide = SLIDES[currentSlide];
-  const progress = ((currentSlide + 1) / SLIDES.length) * 100;
+  const slide = slides[currentSlide];
+  const progress = ((currentSlide + 1) / slides.length) * 100;
+  const isFirst = currentSlide === 0;
 
   const handleNext = () => {
-    if (currentSlide < SLIDES.length - 1) {
+    if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
       onComplete();
@@ -53,95 +64,102 @@ export default function StoryIntro({ onComplete }) {
 
   return (
     <div className="space-y-8">
-      {/* Progress Bar */}
-      <div className="max-w-2xl mx-auto">
-        <div className="flex justify-between mb-3 text-sm text-gray-500">
-          <span>
-            Step {currentSlide + 1} of {SLIDES.length}
-          </span>
-          <span>{progress.toFixed(0)}%</span>
-        </div>
+      <div className="min-h-screen bg-linear-to-br from-sky-50 via-green-50 to-purple-50 p-3 md:p-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="mb-2 pt-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Stock Simulator
+            </h1>
+            <p className="text-lg text-slate-600">Learn with MIMO</p>
+          </div>
 
-        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+          <div className="grid md:grid-cols-2 gap-8 items-start px-12 min-h-screen mx-auto">
+            {/* LEFT COLUMN - Mascot (pushed down slightly) */}
+            <div className="flex flex-col items-center mt-10 md:mt-16">
+              <div className="relative mb-6 animate-float">
+                <div className="w-48 h-48 bg-amber-300 rounded-full shadow-xl flex items-center justify-center text-6xl">
+                  {currentSlide === 0 ? (
+                    <img src={hi} alt="Hi" className="" />
+                  ) : currentSlide === slides.length - 1 ? (
+                    <img src={otherwise} alt="otherwise" />
+                  ) : (
+                    <img src={thinking} alt="thinking" />
+                  )}
+                </div>
+              </div>
 
-      {/* Main Section */}
-      <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {/* Mascot */}
-        <div className="flex flex-col items-center justify-center">
-          <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl p-8 relative">
-            <div className="animate-bounce flex justify-center mb-6">
-              <svg viewBox="0 0 200 200" className="w-40 h-40">
-                <circle cx="100" cy="100" r="60" fill="#D4A574" />
-                <circle cx="70" cy="50" r="20" fill="#D4A574" />
-                <circle cx="130" cy="50" r="20" fill="#D4A574" />
-                <circle cx="70" cy="50" r="12" fill="#A0826D" />
-                <circle cx="130" cy="50" r="12" fill="#A0826D" />
-                <circle cx="80" cy="90" r="8" fill="#1F2937" />
-                <circle cx="120" cy="90" r="8" fill="#1F2937" />
-                <circle cx="82" cy="88" r="3" fill="white" />
-                <circle cx="122" cy="88" r="3" fill="white" />
-                <circle cx="100" cy="110" r="6" fill="#1F2937" />
-                <ellipse cx="100" cy="125" rx="30" ry="25" fill="#E8D4B8" />
-              </svg>
+              <div className="relative w-full max-w-xs">
+                <div className="bg-white rounded-2xl shadow-lg p-6 border">
+                  <p className="text-lg font-semibold text-slate-900 text-center">
+                    {slide.ninoMessage}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Speech Bubble */}
-            <div className="mt-6 bg-white rounded-xl shadow p-4 text-center border">
-              {slide.mascotText}
+            {/* RIGHT COLUMN - Content (starts from top) */}
+            <div className="flex flex-col">
+              <div className="bg-white rounded-3xl shadow-xl p-8">
+                {/* Progress */}
+                <div className="mb-6">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>
+                      Step {currentSlide + 1} of {slides.length}
+                    </span>
+                    <span>
+                      {Math.round(((currentSlide + 1) / slides.length) * 100)}%
+                    </span>
+                  </div>
+
+                  <div className="w-full bg-slate-200 rounded-full h-2">
+                    <div
+                      className="bg-teal-500 h-2 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${((currentSlide + 1) / slides.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Slide Content */}
+                <div className="mb-6 text-6xl">{slide.emoji}</div>
+
+                <h2 className="text-3xl font-bold mb-4">{slide.title}</h2>
+
+                <p className="text-lg text-slate-700 mb-6">
+                  {slide.explanation}
+                </p>
+
+                {/* Navigation */}
+                <div className="flex justify-between mt-8">
+                  <button
+                    onClick={() => handlePrevious()}
+                    disabled={isFirst}
+                    className="px-6 py-3 rounded-xl bg-[#FFC107] text-white disabled:bg-slate-300 transition hover:scale-105"
+                  >
+                    ⬅ Previous
+                  </button>
+                  {slide.type === "end" ? (
+                    <button
+                      onClick={() => setActiveTab("game")}
+                      className="px-6 py-3 rounded-xl bg-[#00796B] text-white disabled:bg-slate-300 transition hover:scale-105"
+                    >
+                      Start Game
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleNext()}
+                      className="px-6 py-3 rounded-xl bg-[#00796B] text-white disabled:bg-slate-300 transition hover:scale-105"
+                    >
+                      Next ➡
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div className="flex items-center">
-          <div className="bg-white shadow-lg p-8 rounded-2xl border">
-            <div className="text-6xl mb-6">{slide.emoji}</div>
-
-            <h2 className="text-3xl font-bold mb-4">{slide.title}</h2>
-
-            <p className="text-gray-600 mb-8">{slide.description}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="flex justify-between max-w-2xl mx-auto items-center">
-        <button
-          onClick={handlePrevious}
-          disabled={currentSlide === 0}
-          className="flex items-center px-6 py-2 border rounded-full disabled:opacity-40"
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Previous
-        </button>
-
-        {/* Dots */}
-        <div className="flex gap-2">
-          {SLIDES.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentSlide(i)}
-              className={`h-3 rounded-full transition-all ${
-                i === currentSlide ? "bg-blue-500 w-8" : "bg-gray-300 w-3"
-              }`}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={handleNext}
-          className="flex items-center px-6 py-2 rounded-full text-white bg-gradient-to-r from-blue-500 to-purple-500"
-        >
-          {currentSlide === SLIDES.length - 1 ? "Start Trading" : "Next"}
-
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </button>
       </div>
     </div>
   );

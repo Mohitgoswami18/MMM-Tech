@@ -28,11 +28,11 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
           <span className="text-2xl font-extrabold tracking-tight text-[#00796B] lg:text-3xl">
-            <span>Mom</span>
-            <span>,&nbsp;</span>
             <span>Money</span>
-            <span>&nbsp;&&nbsp;</span>
+            <span>,&nbsp;</span>
             <span>Mindset</span>
+            <span>&nbsp;&&nbsp;</span>
+            <span>Junior</span>
           </span>
         </Link>
 

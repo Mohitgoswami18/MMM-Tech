@@ -1,191 +1,539 @@
-import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, Plus, Minus } from "lucide-react";
-import StockCard from "./StockCard";
+import { useState, useEffect, useCallback } from "react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  Minus,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  Activity,
+  DollarSign,
+  BarChart2,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+const FINNHUB_API_KEY = "d77jp0hr01qp6aflsjg0d77jp0hr01qp6aflsjgg";
+const FINNHUB_BASE = "https://finnhub.io/api/v1";
 
 const COMPANIES = [
-  {
-    id: "1",
-    name: "NeuroVision AI",
-    symbol: "NVAI",
-    initialPrice: 45.5,
-  },
-  {
-    id: "2",
-    name: "RoboMind Labs",
-    symbol: "RMND",
-    initialPrice: 62.3,
-  },
-  {
-    id: "3",
-    name: "QuantumBrain Tech",
-    symbol: "QBT",
-    initialPrice: 38.75,
-  },
+  { id: "AAPL", symbol: "AAPL", name: "Apple Inc." },
+  { id: "TSLA", symbol: "TSLA", name: "Tesla Inc." },
+  { id: "MSFT", symbol: "MSFT", name: "Microsoft Corp." },
 ];
 
+// ─── API HELPERS ───────────────────────────────────────────────────────────────
+async function fetchQuote(symbol) {
+  const res = await fetch(
+    `${FINNHUB_BASE}/quote?symbol=${symbol}&token=${FINNHUB_API_KEY}`,
+  );
+  if (!res.ok) throw new Error(`Quote fetch failed for ${symbol}`);
+  const data = await res.json();
+  return {
+    current: data.c,
+    change: data.d,
+    changePercent: data.dp,
+    high: data.h,
+    low: data.l,
+    open: data.o,
+    prevClose: data.pc,
+  };
+}
+
+// Returns array of {price, time} points, or null when Finnhub returns no_data.
+// Uses a 90-day window — the free tier has a much higher hit rate over longer ranges.
+async function fetchCandles(symbol) {
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - 90 * 24 * 60 * 60;
+  const res = await fetch(
+    `${FINNHUB_BASE}/stock/candle?symbol=${symbol}&resolution=D&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`,
+  );
+  if (!res.ok) throw new Error(`Candle fetch failed for ${symbol}`);
+  const data = await res.json();
+  if (data.s !== "ok" || !data.c?.length) return null;
+  return data.c.map((price, i) => ({
+    price: Number(price.toFixed(2)),
+    time: new Date(data.t[i] * 1000).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    }),
+  }));
+}
+
+// Synthesises a 5-point sparkline from quote fields.
+// Finnhub free tier frequently returns no_data outside US market hours —
+// this guarantees the chart always renders something real instead of "Loading chart…"
+function buildFallbackHistory(quote) {
+  if (!quote?.current) return [];
+  const { prevClose, open, low, high, current } = quote;
+  return [
+    { price: Number((prevClose ?? current * 0.99).toFixed(2)), time: "Prev" },
+    { price: Number((open ?? current).toFixed(2)), time: "Open" },
+    { price: Number((low ?? current * 0.995).toFixed(2)), time: "Low" },
+    { price: Number((high ?? current * 1.005).toFixed(2)), time: "High" },
+    { price: Number(current.toFixed(2)), time: "Now" },
+  ];
+}
+
+// ─── STOCK CARD ────────────────────────────────────────────────────────────────
+function StockCard({ stock, position, onBuy, onSell, isLoading }) {
+  const isPositive = stock.changePercent >= 0;
+  const currentValue = position ? stock.current * position.shares : 0;
+  const purchaseValue = position ? position.boughtAtPrice * position.shares : 0;
+  const gainLoss = currentValue - purchaseValue;
+  const gainLossPercent =
+    purchaseValue > 0 ? (gainLoss / purchaseValue) * 100 : 0;
+
+  return (
+    <div className="overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-shadow h-full flex flex-col bg-gradient-to-br from-white to-gray-50 border">
+      <div className="bg-linear-to-r from-blue-50 to-purple-50 p-5 border-b">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h3 className="font-bold text-lg">{stock.symbol}</h3>
+            <p className="text-sm text-gray-500">{stock.name}</p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <div
+              className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${isPositive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+            >
+              {isPositive ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )}
+              {isPositive ? "+" : ""}
+              {stock.changePercent?.toFixed(2)}%
+            </div>
+            {isLoading && (
+              <span className="text-xs text-gray-400 flex items-center gap-1">
+                <RefreshCw className="w-3 h-3 animate-spin" /> updating
+              </span>
+            )}
+          </div>
+        </div>
+        <p className="text-3xl font-bold">${stock.current?.toFixed(2)}</p>
+        <div className="flex gap-3 mt-1 text-xs text-gray-500">
+          <span>H: ${stock.high?.toFixed(2)}</span>
+          <span>L: ${stock.low?.toFixed(2)}</span>
+          <span>O: ${stock.open?.toFixed(2)}</span>
+        </div>
+        {position && (
+          <p className="text-xs text-gray-400 mt-1">
+            Avg. buy: ${position.boughtAtPrice?.toFixed(2)}
+          </p>
+        )}
+      </div>
+
+      <div className="h-40 bg-white/50 px-1 pt-2">
+        {stock.priceHistory?.length > 1 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={stock.priceHistory}>
+              <XAxis dataKey="time" hide />
+              <YAxis domain={["auto", "auto"]} hide />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                  fontSize: "12px",
+                }}
+                formatter={(v) => [`$${v}`, "Price"]}
+                labelFormatter={(l) => l}
+              />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke={isPositive ? "#10b981" : "#ef4444"}
+                strokeWidth={2}
+                dot={false}
+                isAnimationActive={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+            <Activity className="w-4 h-4 mr-2" />
+            Loading chart…
+          </div>
+        )}
+      </div>
+
+      {position && (
+        <div className="bg-blue-50 border-t p-4">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Shares Owned:</span>
+              <span className="font-bold">{position.shares}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Current Value:</span>
+              <span className="font-bold">${currentValue.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Gain / Loss:</span>
+              <span
+                className={`font-bold ${gainLoss >= 0 ? "text-green-600" : "text-red-600"}`}
+              >
+                {gainLoss >= 0 ? "+" : ""}
+                {gainLoss.toFixed(2)} ({gainLossPercent >= 0 ? "+" : ""}
+                {gainLossPercent.toFixed(1)}%)
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="p-4 border-t space-y-2 mt-auto bg-white">
+        <button
+          onClick={onBuy}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
+        >
+          Buy
+        </button>
+        <button
+          onClick={onSell}
+          disabled={!position}
+          className={`w-full py-2 rounded-lg font-medium border transition ${position ? "border-gray-300 hover:bg-gray-100" : "border-gray-200 text-gray-400 cursor-not-allowed"}`}
+        >
+          Sell
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── TRADE MODAL ───────────────────────────────────────────────────────────────
+function TradeModal({
+  type,
+  stock,
+  shares,
+  balance,
+  position,
+  onSharesChange,
+  onConfirm,
+  onCancel,
+}) {
+  const isBuy = type === "BUY";
+  const cost = stock ? stock.current * shares : 0;
+  const maxSell = position?.shares ?? 0;
+  const canConfirm = isBuy
+    ? cost <= balance && shares > 0
+    : shares <= maxSell && shares > 0;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-6 w-96 shadow-2xl">
+        <h2 className="text-xl font-bold mb-1">
+          {isBuy ? "Buy" : "Sell"} {stock?.symbol}
+        </h2>
+        <p className="text-gray-500 text-sm mb-4">{stock?.name}</p>
+
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-500">Current Price</span>
+            <span className="font-semibold">${stock?.current?.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-500">
+              {isBuy ? "Total Cost" : "Proceeds"}
+            </span>
+            <span className="font-semibold">${cost.toFixed(2)}</span>
+          </div>
+          {isBuy && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Balance After</span>
+              <span
+                className={`font-semibold ${balance - cost < 0 ? "text-red-500" : "text-green-600"}`}
+              >
+                ${(balance - cost).toFixed(2)}
+              </span>
+            </div>
+          )}
+          {!isBuy && (
+            <div className="flex justify-between">
+              <span className="text-gray-500">Shares Available</span>
+              <span className="font-semibold">{maxSell}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center gap-4 mb-5">
+          <button
+            className="p-2 border rounded-lg hover:bg-gray-100 transition"
+            onClick={() => onSharesChange(Math.max(1, shares - 1))}
+          >
+            <Minus size={16} />
+          </button>
+          <div className="text-center">
+            <p className="text-3xl font-bold">{shares}</p>
+            <p className="text-xs text-gray-400">shares</p>
+          </div>
+          <button
+            className="p-2 border rounded-lg hover:bg-gray-100 transition"
+            onClick={() =>
+              onSharesChange(isBuy ? shares + 1 : Math.min(maxSell, shares + 1))
+            }
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+
+        {isBuy && cost > balance && (
+          <p className="text-red-500 text-xs text-center mb-3">
+            ⚠ Insufficient balance
+          </p>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            className="border px-4 py-2 rounded-lg w-full hover:bg-gray-50 transition"
+            onClick={onCancel}
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!canConfirm}
+            className={`px-4 py-2 rounded-lg w-full text-white font-medium transition ${isBuy ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"} disabled:opacity-40 disabled:cursor-not-allowed`}
+            onClick={onConfirm}
+          >
+            Confirm {isBuy ? "Buy" : "Sell"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function TradingGame() {
-  const [balance, setBalance] = useState(1000);
+  const [balance, setBalance] = useState(10000);
   const [positions, setPositions] = useState([]);
   const [stocks, setStocks] = useState(
-    COMPANIES.map((company) => ({
-      ...company,
-      price: company.initialPrice,
-      priceHistory: [company.initialPrice],
+    COMPANIES.map((c) => ({
+      ...c,
+      current: null,
+      change: 0,
       changePercent: 0,
+      high: null,
+      low: null,
+      open: null,
+      prevClose: null,
+      priceHistory: [],
     })),
   );
-
-  const [buyDialog, setBuyDialog] = useState({
+  const [loadingSymbols, setLoadingSymbols] = useState(new Set());
+  const [apiConnected, setApiConnected] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [tradeDialog, setTradeDialog] = useState({
     isOpen: false,
+    type: "BUY",
     stockId: null,
     shares: 1,
   });
 
-  const [sellDialog, setSellDialog] = useState({
-    isOpen: false,
-    stockId: null,
-    shares: 1,
-  });
+  const refreshAll = useCallback(async (preserveHistory = false) => {
+    setLoadingSymbols(new Set(COMPANIES.map((c) => c.id)));
 
-  // simulate stock price changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStocks((prevStocks) =>
-        prevStocks.map((stock) => {
-          const change = (Math.random() - 0.48) * 5;
-          const newPrice = Math.max(stock.price + change, 1);
-          const changePercent = ((newPrice - stock.price) / stock.price) * 100;
+    const results = await Promise.allSettled(
+      COMPANIES.map(async (company) => {
+        const [quoteResult, historyResult] = await Promise.allSettled([
+          fetchQuote(company.symbol),
+          preserveHistory
+            ? Promise.resolve(null)
+            : fetchCandles(company.symbol),
+        ]);
 
-          return {
-            ...stock,
-            price: newPrice,
-            priceHistory: [...stock.priceHistory.slice(-19), newPrice],
-            changePercent,
-          };
-        }),
-      );
-    }, 2000);
+        const quote =
+          quoteResult.status === "fulfilled" ? quoteResult.value : null;
+        const candleData =
+          historyResult.status === "fulfilled" ? historyResult.value : null;
 
-    return () => clearInterval(interval);
+        // Priority order:
+        // 1. Real 90-day candle history (best case)
+        // 2. Fallback sparkline from quote fields (when candles return null/empty)
+        // 3. null sentinel (preserveHistory=true — leave existing priceHistory untouched)
+        let history;
+        if (preserveHistory) {
+          history = null;
+        } else if (candleData && candleData.length > 1) {
+          history = candleData;
+        } else {
+          history = buildFallbackHistory(quote);
+        }
+
+        return { id: company.id, quote, history };
+      }),
+    );
+
+    const anySuccess = results.some(
+      (r) => r.status === "fulfilled" && r.value.quote !== null,
+    );
+
+    setStocks((prev) =>
+      prev.map((stock) => {
+        const result = results.find(
+          (r) => r.status === "fulfilled" && r.value.id === stock.id,
+        );
+        if (!result) return stock;
+        const { quote, history } = result.value;
+        return {
+          ...stock,
+          ...(quote ?? {}),
+          priceHistory: history !== null ? history : stock.priceHistory,
+        };
+      }),
+    );
+
+    setApiConnected(anySuccess);
+    setLoadingSymbols(new Set());
+    setLastUpdated(new Date());
   }, []);
+
+  useEffect(() => {
+    refreshAll(false);
+    const interval = setInterval(() => refreshAll(true), 15000);
+    return () => clearInterval(interval);
+  }, [refreshAll]);
 
   const portfolioValue = positions.reduce((sum, pos) => {
     const stock = stocks.find((s) => s.id === pos.stockId);
-    return sum + (stock ? stock.price * pos.shares : 0);
+    return sum + (stock?.current ? stock.current * pos.shares : 0);
   }, 0);
-
   const totalValue = balance + portfolioValue;
-  const profitLoss = totalValue - 1000;
-  const profitLossPercent = (profitLoss / 1000) * 100;
+  const STARTING_BALANCE = 10000;
+  const profitLoss = totalValue - STARTING_BALANCE;
+  const profitLossPercent = (profitLoss / STARTING_BALANCE) * 100;
 
-  const handleBuy = (stockId) => {
-    setBuyDialog({ isOpen: true, stockId, shares: 1 });
-  };
-
+  const handleBuy = (stockId) =>
+    setTradeDialog({ isOpen: true, type: "BUY", stockId, shares: 1 });
   const handleSell = (stockId) => {
     const position = positions.find((p) => p.stockId === stockId);
-    if (position) {
-      setSellDialog({ isOpen: true, stockId, shares: 1 });
+    if (position)
+      setTradeDialog({ isOpen: true, type: "SELL", stockId, shares: 1 });
+  };
+
+  const confirmTrade = () => {
+    const stock = stocks.find((s) => s.id === tradeDialog.stockId);
+    const { type, shares, stockId } = tradeDialog;
+
+    if (type === "BUY") {
+      const cost = stock.current * shares;
+      if (cost > balance) return;
+      setBalance((b) => b - cost);
+      setPositions((prev) => {
+        const existing = prev.find((p) => p.stockId === stockId);
+        if (existing) {
+          return prev.map((p) =>
+            p.stockId === stockId
+              ? {
+                  ...p,
+                  shares: p.shares + shares,
+                  boughtAtPrice:
+                    (p.boughtAtPrice * p.shares + stock.current * shares) /
+                    (p.shares + shares),
+                }
+              : p,
+          );
+        }
+        return [...prev, { stockId, shares, boughtAtPrice: stock.current }];
+      });
+    } else {
+      const proceeds = stock.current * shares;
+      setBalance((b) => b + proceeds);
+      setPositions((prev) =>
+        prev
+          .map((p) =>
+            p.stockId === stockId ? { ...p, shares: p.shares - shares } : p,
+          )
+          .filter((p) => p.shares > 0),
+      );
     }
+
+    setTradeDialog({ isOpen: false, type: "BUY", stockId: null, shares: 1 });
   };
 
-  const confirmBuy = () => {
-    const stock = stocks.find((s) => s.id === buyDialog.stockId);
-    const cost = stock.price * buyDialog.shares;
-
-    if (cost > balance) return;
-
-    setBalance(balance - cost);
-
-    setPositions((prev) => {
-      const existing = prev.find((p) => p.stockId === buyDialog.stockId);
-
-      if (existing) {
-        return prev.map((p) =>
-          p.stockId === buyDialog.stockId
-            ? { ...p, shares: p.shares + buyDialog.shares }
-            : p,
-        );
-      }
-
-      return [
-        ...prev,
-        {
-          stockId: buyDialog.stockId,
-          shares: buyDialog.shares,
-          boughtAtPrice: stock.price,
-        },
-      ];
-    });
-
-    setBuyDialog({ isOpen: false, stockId: null, shares: 1 });
-  };
-
-  const confirmSell = () => {
-    const stock = stocks.find((s) => s.id === sellDialog.stockId);
-    const position = positions.find((p) => p.stockId === sellDialog.stockId);
-
-    const proceeds = stock.price * sellDialog.shares;
-
-    setBalance(balance + proceeds);
-
-    setPositions((prev) =>
-      prev
-        .map((p) =>
-          p.stockId === sellDialog.stockId
-            ? { ...p, shares: p.shares - sellDialog.shares }
-            : p,
-        )
-        .filter((p) => p.shares > 0),
-    );
-
-    setSellDialog({ isOpen: false, stockId: null, shares: 1 });
-  };
+  const activeStock = stocks.find((s) => s.id === tradeDialog.stockId);
+  const activePosition = positions.find(
+    (p) => p.stockId === tradeDialog.stockId,
+  );
 
   return (
-    <div className="space-y-8">
-      {/* Dashboard */}
+    <div className="space-y-8 p-4">
+      <div className="max-w-4xl mx-auto flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center gap-2">
+          {apiConnected === null ? (
+            <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
+          ) : apiConnected ? (
+            <Wifi className="w-4 h-4 text-green-500" />
+          ) : (
+            <WifiOff className="w-4 h-4 text-red-400" />
+          )}
+          <span>
+            {apiConnected === null
+              ? "Connecting to market data…"
+              : apiConnected
+                ? "Live market data · refreshes every 15s"
+                : "API key not set — add your Finnhub key in config"}
+          </span>
+        </div>
+        {lastUpdated && (
+          <span className="text-xs text-gray-400">
+            Updated {lastUpdated.toLocaleTimeString()}
+          </span>
+        )}
+      </div>
+
       <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
         <div className="bg-blue-600 text-white rounded-2xl p-6 shadow-lg">
-          <p className="text-sm opacity-80">Cash Balance</p>
+          <div className="flex items-center gap-2 mb-1">
+            <DollarSign className="w-4 h-4 opacity-70" />
+            <p className="text-sm opacity-80">Cash Balance</p>
+          </div>
           <p className="text-3xl font-bold">${balance.toFixed(2)}</p>
         </div>
-
         <div className="bg-purple-500 text-white rounded-2xl p-6 shadow-lg">
-          <p className="text-sm opacity-80">Portfolio Value</p>
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart2 className="w-4 h-4 opacity-70" />
+            <p className="text-sm opacity-80">Portfolio Value</p>
+          </div>
           <p className="text-3xl font-bold">${portfolioValue.toFixed(2)}</p>
         </div>
-
         <div
-          className={`rounded-2xl p-6 shadow-lg text-white ${
-            profitLoss >= 0 ? "bg-green-500" : "bg-red-500"
-          }`}
+          className={`rounded-2xl p-6 shadow-lg text-white ${profitLoss >= 0 ? "bg-green-500" : "bg-red-500"}`}
         >
-          <p className="text-sm opacity-80">Total Value</p>
-          <p className="text-3xl font-bold">${totalValue.toFixed(2)}</p>
-
-          <div className="flex items-center gap-1 text-xs mt-1">
+          <div className="flex items-center gap-2 mb-1">
             {profitLoss >= 0 ? (
-              <TrendingUp size={14} />
+              <TrendingUp className="w-4 h-4 opacity-70" />
             ) : (
-              <TrendingDown size={14} />
+              <TrendingDown className="w-4 h-4 opacity-70" />
             )}
+            <p className="text-sm opacity-80">Total Value</p>
+          </div>
+          <p className="text-3xl font-bold">${totalValue.toFixed(2)}</p>
+          <p className="text-xs mt-1 opacity-80">
             {profitLoss >= 0 ? "+" : ""}
             {profitLoss.toFixed(2)} ({profitLossPercent.toFixed(1)}%)
-          </div>
+          </p>
         </div>
       </div>
 
-      {/* Stock Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {stocks.map((stock) => {
           const position = positions.find((p) => p.stockId === stock.id);
-
           return (
             <StockCard
               key={stock.id}
               stock={stock}
               position={position}
+              isLoading={loadingSymbols.has(stock.id)}
               onBuy={() => handleBuy(stock.id)}
               onSell={() => handleSell(stock.id)}
             />
@@ -193,59 +541,26 @@ export default function TradingGame() {
         })}
       </div>
 
-      {/* Buy Modal */}
-      {buyDialog.isOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 w-96">
-            <h2 className="text-xl font-bold mb-4">Buy Shares</h2>
-
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <button
-                className="p-2 border rounded"
-                onClick={() =>
-                  setBuyDialog((p) => ({
-                    ...p,
-                    shares: Math.max(1, p.shares - 1),
-                  }))
-                }
-              >
-                <Minus size={16} />
-              </button>
-
-              <span className="text-xl font-bold">{buyDialog.shares}</span>
-
-              <button
-                className="p-2 border rounded"
-                onClick={() =>
-                  setBuyDialog((p) => ({
-                    ...p,
-                    shares: p.shares + 1,
-                  }))
-                }
-              >
-                <Plus size={16} />
-              </button>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                className="border px-4 py-2 rounded w-full"
-                onClick={() =>
-                  setBuyDialog({ isOpen: false, stockId: null, shares: 1 })
-                }
-              >
-                Cancel
-              </button>
-
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-                onClick={confirmBuy}
-              >
-                Confirm Buy
-              </button>
-            </div>
-          </div>
-        </div>
+      {tradeDialog.isOpen && activeStock && (
+        <TradeModal
+          type={tradeDialog.type}
+          stock={activeStock}
+          shares={tradeDialog.shares}
+          balance={balance}
+          position={activePosition}
+          onSharesChange={(n) =>
+            setTradeDialog((prev) => ({ ...prev, shares: n }))
+          }
+          onConfirm={confirmTrade}
+          onCancel={() =>
+            setTradeDialog({
+              isOpen: false,
+              type: "BUY",
+              stockId: null,
+              shares: 1,
+            })
+          }
+        />
       )}
     </div>
   );

@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
+import hi from "../assets/mascot/hi.png";
+import thinking from "../assets/mascot/thinking.png";
+import otherwise from "../assets/mascot/otherwise.png";
 import Navbar from "../components/Navbar";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import badge from "../assets/images/badge-star.jpg";
 import needsvswants from "../assets/images/needs-vs-wants.jpg";
 import saveModuleProgress from "../utils/progress";
-import { Button } from "@/components/ui/button";
 
 const DRAG_ITEMS = [
   { id: "food", emoji: "\uD83C\uDF4E", label: "Food", answer: "need" },
@@ -495,7 +497,6 @@ export default function NeedsVsWants() {
   const [quizPassed, setQuizPassed] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
 
-
   useEffect(() => {
     if (gameCompleted && quizPassed && !progressSaved) {
       saveModuleProgress("needs-vs-wants");
@@ -510,103 +511,100 @@ export default function NeedsVsWants() {
     { id: "badge", label: "Badge", emoji: "\uD83C\uDFC6" },
   ];
 
-   const slides = [
-     {
-       id: 1,
-       title: "Introduction",
-       emoji: "🎯",
-       explanation:
-         "Today, we're going on a small adventure to the market with MIMO! Along the way, we'll discover which things are NEEDS and which are WANTS. Knowing the difference helps you make smart money choices.",
-       ninoMessage: "Hi there! I'm MIMO 🐻 Ready to become a money-smart hero?",
-       type: "intro",
-     },
+  const slides = [
+    {
+      id: 1,
+      title: "Introduction",
+      emoji: "🎯",
+      explanation:
+        "Today, we're going on a small adventure to the market with MIMO! Along the way, we'll discover which things are NEEDS and which are WANTS. Knowing the difference helps you make smart money choices.",
+      ninoMessage: "Hi there! I'm MIMO 🐻 Ready to become a money-smart hero?",
+      type: "intro",
+    },
 
-     {
-       id: 2,
-       title: "The Hungry Morning",
-       emoji: "🍳",
-       explanation:
-         "One morning, Aarav wakes up feeling very hungry. He needs breakfast to have energy for school. Without food, he would feel tired and weak. Food gives our body strength and keeps us healthy.",
-       ninoMessage:
-         "Food keeps us strong and ready to learn! That sounds important, right?",
-       type: "need",
-     },
+    {
+      id: 2,
+      title: "The Hungry Morning",
+      emoji: "🍳",
+      explanation:
+        "One morning, Aarav wakes up feeling very hungry. He needs breakfast to have energy for school. Without food, he would feel tired and weak. Food gives our body strength and keeps us healthy.",
+      ninoMessage:
+        "Food keeps us strong and ready to learn! That sounds important, right?",
+      type: "need",
+    },
 
-     {
-       id: 3,
-       title: "New Video Game",
-       emoji: "🎮",
-       explanation:
-         "After school, Aarav sees a brand new video game in the store. It looks super fun and exciting! But even if he doesn't buy it, he can still live, study, and stay healthy without it.",
-       ninoMessage:
-         "Games are fun, but we can live without them. That makes it a WANT!",
-       type: "want",
-     },
+    {
+      id: 3,
+      title: "New Video Game",
+      emoji: "🎮",
+      explanation:
+        "After school, Aarav sees a brand new video game in the store. It looks super fun and exciting! But even if he doesn't buy it, he can still live, study, and stay healthy without it.",
+      ninoMessage:
+        "Games are fun, but we can live without them. That makes it a WANT!",
+      type: "want",
+    },
 
-     {
-       id: 4,
-       title: "Rainy Day Surprise",
-       emoji: "☔",
-       explanation:
-         "Suddenly, it starts raining heavily! Aarav needs an umbrella or raincoat to stay dry and avoid getting sick. Staying protected from weather keeps us safe and healthy.",
-       ninoMessage: "Staying safe and healthy is always a NEED!",
-       type: "need",
-     },
+    {
+      id: 4,
+      title: "Rainy Day Surprise",
+      emoji: "☔",
+      explanation:
+        "Suddenly, it starts raining heavily! Aarav needs an umbrella or raincoat to stay dry and avoid getting sick. Staying protected from weather keeps us safe and healthy.",
+      ninoMessage: "Staying safe and healthy is always a NEED!",
+      type: "need",
+    },
 
-     {
-       id: 5,
-       title: "Colorful Sneakers",
-       emoji: "👟",
-       explanation:
-         "Aarav already has good shoes at home. But he sees colorful sneakers with flashing lights and really wants them! They look cool, but his old shoes still work perfectly fine.",
-       ninoMessage:
-         "If you already have something that works, the new one might just be a WANT!",
-       type: "want",
-     },
+    {
+      id: 5,
+      title: "Colorful Sneakers",
+      emoji: "👟",
+      explanation:
+        "Aarav already has good shoes at home. But he sees colorful sneakers with flashing lights and really wants them! They look cool, but his old shoes still work perfectly fine.",
+      ninoMessage:
+        "If you already have something that works, the new one might just be a WANT!",
+      type: "want",
+    },
 
-     {
-       id: 6,
-       title: "Medicine Time",
-       emoji: "💊",
-       explanation:
-         "One evening, Aarav gets a fever. The doctor gives him medicine to help him feel better. Without medicine, he might stay sick longer.",
-       ninoMessage:
-         "Medicine helps us recover and stay healthy. That's definitely a NEED!",
-       type: "need",
-     },
+    {
+      id: 6,
+      title: "Medicine Time",
+      emoji: "💊",
+      explanation:
+        "One evening, Aarav gets a fever. The doctor gives him medicine to help him feel better. Without medicine, he might stay sick longer.",
+      ninoMessage:
+        "Medicine helps us recover and stay healthy. That's definitely a NEED!",
+      type: "need",
+    },
 
-     {
-       id: 7,
-       title: "Ice Cream Treat",
-       emoji: "🍦",
-       explanation:
-         "On the way home, Aarav asks for ice cream. It tastes delicious and makes him happy, but skipping it won't harm his health or survival.",
-       ninoMessage:
-         "Ice cream is yummy, but it's not essential. That's a WANT!",
-       type: "want",
-     },
+    {
+      id: 7,
+      title: "Ice Cream Treat",
+      emoji: "🍦",
+      explanation:
+        "On the way home, Aarav asks for ice cream. It tastes delicious and makes him happy, but skipping it won't harm his health or survival.",
+      ninoMessage: "Ice cream is yummy, but it's not essential. That's a WANT!",
+      type: "want",
+    },
 
-     {
-       id: 8,
-       title: "Final Challenge",
-       emoji: "🧠",
-       explanation:
-         "Before we finish, remember: NEEDS help us survive and stay healthy. WANTS make life fun and exciting, but we can live without them. Now it's your turn to decide wisely!",
-       ninoMessage:
-         "You're doing amazing! Ready to test your smart money skills?",
-       type: "end",
-     },
-   ];
+    {
+      id: 8,
+      title: "Final Challenge",
+      emoji: "🧠",
+      explanation:
+        "Before we finish, remember: NEEDS help us survive and stay healthy. WANTS make life fun and exciting, but we can live without them. Now it's your turn to decide wisely!",
+      ninoMessage:
+        "You're doing amazing! Ready to test your smart money skills?",
+      type: "end",
+    },
+  ];
 
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
-   
-   const [currentSlide, setCurrentSlide] = useState(0);
-   const [selectedAnswer, setSelectedAnswer] = useState(null);
-   const [showFeedback, setShowFeedback] = useState(false);
-   
-   const slide = slides[currentSlide];
-   const isFirst = currentSlide === 0;
-   const isLast = currentSlide === slides.length - 1;
+  const slide = slides[currentSlide];
+  const isFirst = currentSlide === 0;
+  const isLast = currentSlide === slides.length - 1;
   const goToNext = () => {
     if (!isLast) {
       setCurrentSlide((prev) => prev + 1);
@@ -708,7 +706,13 @@ export default function NeedsVsWants() {
                   <div className="flex flex-col items-center mt-10 md:mt-16">
                     <div className="relative mb-6 animate-float">
                       <div className="w-48 h-48 bg-amber-300 rounded-full shadow-xl flex items-center justify-center text-6xl">
-                        🐻
+                        {currentSlide === 0 ? (
+                          <img src={hi} alt="Hi" className="" />
+                        ) : currentSlide === slides.length - 1 ? (
+                          <img src={otherwise} alt="otherwise" />
+                        ) : (
+                          <img src={thinking} alt="thinking" />
+                        )}
                       </div>
                     </div>
 
@@ -756,8 +760,6 @@ export default function NeedsVsWants() {
                       <p className="text-lg text-slate-700 mb-6">
                         {slide.explanation}
                       </p>
-
-                      
 
                       {/* Navigation */}
                       <div className="flex justify-between mt-8">

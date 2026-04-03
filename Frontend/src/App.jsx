@@ -6,10 +6,13 @@ import Login from './pages/Login';
 import Signup from './pages/signup';
 import Profile from './components/Porfile.jsx'
 import StockSimulator from './components/StockSimulator.jsx';
+import StoryIntro from './components/StoryIntro.jsx';
+import TradingGame from './components/TradingGame.jsx';
+
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={< Home/>} />
       <Route path="/modules" element={<Modules></Modules>}></Route>
       <Route
         path="/modules/needs-vs-wants"
