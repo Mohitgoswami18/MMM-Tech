@@ -4,7 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import budgetingbasics from "../assets/images/budgeting-basics.jpg";
 import Navbar from "./Navbar.jsx";
 import badge from "../assets/images/badge-star.jpg";
-import { useState } from "react";
+import { useState ,useEffect, use} from "react";
+import { supabase } from "../supabaseClient";
 import hi from "../assets/mascot/hi.png";
 import thinking from "../assets/mascot/thinking.png";
 import otherwise from "../assets/mascot/otherwise.png";
@@ -49,25 +50,71 @@ const slides = [
 ];
 
 export default function StockSimulator() {
+  console.log("🎮 StockSimulator component rendered"); // Debugging line to check when component renders
   const [activeTab, setActiveTab] = useState("intro");
   const [currentSlide, setCurrentSlide] = useState(0);
-    const slide = slides[currentSlide];
-    const progress = ((currentSlide + 1) / slides.length) * 100;
-    const isFirst = currentSlide === 0;
+  const [authLoading, setAuthLoading] = useState(true);
+  const slide = slides[currentSlide];
+  const [userId ,setUserId] = useState(null);
+  const progress = ((currentSlide + 1) / slides.length) * 100;
+  const isFirst = currentSlide === 0;
   
-    const handleNext = () => {
-      if (currentSlide < slides.length - 1) {
-        setCurrentSlide(currentSlide + 1);
-      } else {
-        onComplete();
+
+  useEffect(() => {
+    console.log("📍 StockSimulator useEffect triggered - checking authentication");
+    
+    supabase.auth.getSession().then(({ data: sessionData, error: sessionError }) => {
+      console.log("📌 Session check result:", { hasSession: !!sessionData.session, error: sessionError });
+      
+      if (sessionError) {
+        console.error("❌ Session error:", sessionError);
+        setAuthLoading(false);
+        return;
       }
-    };
-  
-    const handlePrevious = () => {
-      if (currentSlide > 0) {
-        setCurrentSlide(currentSlide - 1);
+
+      if (!sessionData.session) {
+        console.warn("⚠️  No active session - user not logged in");
+        setAuthLoading(false);
+        return;
       }
-    };
+
+      console.log("✅ User has active session");
+      
+      supabase.auth.getUser().then(({ data, error }) => {
+        console.log("📌 Auth data on StockSimulator load:", data); // Debugging line to check auth data    
+        if (error) {
+          console.error("❌ Error getting user:", error);
+        }
+        if (data?.user) {
+          console.log("✅ Current user ID:", data.user.id); // Debugging line to check user ID
+          setUserId(data.user.id);
+        } else {
+          console.log("⚠️  No user found in auth data");
+        }
+        setAuthLoading(false);
+      }).catch((err) => {
+        console.error("❌ Error getting user (catch):", err);
+        setAuthLoading(false);
+      });
+    }).catch((err) => {
+      console.error("❌ Error getting session (catch):", err);
+      setAuthLoading(false);
+    });
+  }, [])
+  const handleNext = () => {
+    if (currentSlide < slides.length - 1) {
+      setCurrentSlide(currentSlide + 1);
+    } else {
+      // On last slide, switch to game tab
+      setActiveTab("game");
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1);
+    }
+  };
 
 
   const tabs = [
@@ -75,7 +122,7 @@ export default function StockSimulator() {
     { id: "game", label: "Play", emoji: "\uD83C\uDFAE" },
     { id: "badge", label: "Badge", emoji: "\uD83C\uDFC6" },
   ];
-
+ 
   function CompletionBadge() {
     return (
       <div className="flex flex-col items-center gap-4 rounded-3xl bg-linear-to-br from-[#FDE047]/30 via-[#F97316]/20 to-[#22C55E]/30 p-8 text-center">
@@ -101,6 +148,7 @@ export default function StockSimulator() {
       </div>
     );
   }
+  
 
   return (
     <main className="min-h-screen bg-linear-to-br from-gray-50 via-white to-purple-50">
@@ -270,7 +318,7 @@ export default function StockSimulator() {
                   </div>
                 </div>
           ) : activeTab === "game" ? (
-            <TradingGame />
+            <TradingGame userId={userId} />
           ) : (
             <div className="flex flex-col gap-8">
               <CompletionBadge />

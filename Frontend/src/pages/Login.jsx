@@ -10,20 +10,30 @@ function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const handleGoogleLogin = async () => {
+const handleGoogleLogin = async () => {
+  try {
     setErrorMessage("");
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
+      options: {
+        redirectTo: window.location.origin, // works for localhost + vercel
+      },
     });
 
     if (error) {
-      setErrorMessage(error.message);
-      setLoading(false);
+      throw error;
     }
-  };
+
+    // ⚠️ No need to setLoading(false)
+    // because user will be redirected to Google
+  } catch (err) {
+    console.error("Google Login Error:", err.message);
+    setErrorMessage(err.message || "Google login failed");
+    setLoading(false);
+  }
+};
 
   const handleLogin = async (e) => {
     e.preventDefault();

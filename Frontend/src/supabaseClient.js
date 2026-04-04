@@ -4,6 +4,8 @@
 // All other parts of the app should import this client when they need
 // to talk to Supabase (for authentication or database access).
 
+console.log("🚀 supabaseClient.js is loading...");
+
 import { createClient } from '@supabase/supabase-js';
 
 // We NEVER hardcode Supabase credentials in the source code.
@@ -16,6 +18,9 @@ import { createClient } from '@supabase/supabase-js';
 // The `VITE_` prefix is required so Vite can safely expose them to the browser.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log("📌 Supabase URL loaded:", !!supabaseUrl);
+console.log("📌 Supabase Key loaded:", !!supabaseAnonKey);
 
 // Basic safety check to help beginners:
 // If either variable is missing, we log a clear error in the console.
@@ -31,6 +36,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Create a single Supabase client using ONLY the public anon key.
 // The anon key is safe to use in frontend applications and has limited permissions.
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+console.log("✅ Supabase client created successfully");
 
 // Supabase auth quick reference:
 // - Google login:

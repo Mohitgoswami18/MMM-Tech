@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Home from './components/Home'
 import {Routes, Route} from 'react-router-dom'
 import Modules from './components/Modules'
@@ -8,8 +9,47 @@ import Profile from './components/Porfile.jsx'
 import StockSimulator from './components/StockSimulator.jsx';
 import StoryIntro from './components/StoryIntro.jsx';
 import TradingGame from './components/TradingGame.jsx';
+import { supabase } from './supabaseClient';
 
 function App() {
+  const [sessionState, setSessionState] = useState(null);
+
+  useEffect(() => {
+    console.log("🌍 App.jsx mounted - checking global session state");
+    
+    supabase.auth.getSession().then(({ data: sessionData, error }) => {
+      if (error) {
+        console.error("❌ Error getting session in App:", error);
+        return;
+      }
+      
+      if (sessionData?.session) {
+        console.log("✅ App: Active session found for user:", sessionData.session.user?.id);
+        console.log("📌 Session details:", {
+          userId: sessionData.session.user?.id,
+          email: sessionData.session.user?.email,
+          expiresAt: sessionData.session.expires_at
+        });
+        setSessionState(sessionData.session);
+      } else {
+        console.warn("⚠️  App: No active session detected");
+        setSessionState(null);
+      }
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("🔔 Auth state changed:", event, "userId:", session?.user?.id);
+        setSessionState(session);
+      }
+    );
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
   return (
     <Routes>
       <Route path="/" element={< Home/>} />

@@ -22,7 +22,7 @@ export default async function saveModuleProgress(moduleId) {
       .insert({
         user_id: user.id,
         module_id: moduleId,
-        email:email,
+        
         completed: true,
         completed_at: new Date().toISOString(),
       })

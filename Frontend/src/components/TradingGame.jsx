@@ -1,3 +1,6 @@
+
+
+
 import { useState, useEffect, useCallback } from "react";
 import {
   TrendingUp,
@@ -19,9 +22,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { supabase } from "../supabaseClient";
 
 const FINNHUB_API_KEY = "d77jp0hr01qp6aflsjg0d77jp0hr01qp6aflsjgg";
 const FINNHUB_BASE = "https://finnhub.io/api/v1";
+const STARTING_BALANCE = 100000;
 
 const COMPANIES = [
   { id: "AAPL", symbol: "AAPL", name: "Apple Inc." },
@@ -47,8 +52,6 @@ async function fetchQuote(symbol) {
   };
 }
 
-// Returns array of {price, time} points, or null when Finnhub returns no_data.
-// Uses a 90-day window — the free tier has a much higher hit rate over longer ranges.
 async function fetchCandles(symbol) {
   const to = Math.floor(Date.now() / 1000);
   const from = to - 90 * 24 * 60 * 60;
@@ -67,9 +70,6 @@ async function fetchCandles(symbol) {
   }));
 }
 
-// Synthesises a 5-point sparkline from quote fields.
-// Finnhub free tier frequently returns no_data outside US market hours —
-// this guarantees the chart always renders something real instead of "Loading chart…"
 function buildFallbackHistory(quote) {
   if (!quote?.current) return [];
   const { prevClose, open, low, high, current } = quote;
@@ -92,7 +92,7 @@ function StockCard({ stock, position, onBuy, onSell, isLoading }) {
     purchaseValue > 0 ? (gainLoss / purchaseValue) * 100 : 0;
 
   return (
-    <div className="overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-shadow h-full flex flex-col bg-gradient-to-br from-white to-gray-50 border">
+    <div className="overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-shadow h-full flex flex-col bg-linear-to-br from-white to-gray-50 border">
       <div className="bg-linear-to-r from-blue-50 to-purple-50 p-5 border-b">
         <div className="flex justify-between items-start mb-2">
           <div>
@@ -220,6 +220,7 @@ function TradeModal({
   onSharesChange,
   onConfirm,
   onCancel,
+  isTrading,
 }) {
   const isBuy = type === "BUY";
   const cost = stock ? stock.current * shares : 0;
@@ -269,6 +270,7 @@ function TradeModal({
           <button
             className="p-2 border rounded-lg hover:bg-gray-100 transition"
             onClick={() => onSharesChange(Math.max(1, shares - 1))}
+            disabled={isTrading}
           >
             <Minus size={16} />
           </button>
@@ -281,6 +283,7 @@ function TradeModal({
             onClick={() =>
               onSharesChange(isBuy ? shares + 1 : Math.min(maxSell, shares + 1))
             }
+            disabled={isTrading}
           >
             <Plus size={16} />
           </button>
@@ -296,15 +299,23 @@ function TradeModal({
           <button
             className="border px-4 py-2 rounded-lg w-full hover:bg-gray-50 transition"
             onClick={onCancel}
+            disabled={isTrading}
           >
             Cancel
           </button>
           <button
-            disabled={!canConfirm}
+            disabled={!canConfirm || isTrading}
             className={`px-4 py-2 rounded-lg w-full text-white font-medium transition ${isBuy ? "bg-blue-600 hover:bg-blue-700" : "bg-red-500 hover:bg-red-600"} disabled:opacity-40 disabled:cursor-not-allowed`}
             onClick={onConfirm}
           >
-            Confirm {isBuy ? "Buy" : "Sell"}
+            {isTrading ? (
+              <span className="flex items-center justify-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                Processing…
+              </span>
+            ) : (
+              `Confirm ${isBuy ? "Buy" : "Sell"}`
+            )}
           </button>
         </div>
       </div>
@@ -313,9 +324,23 @@ function TradeModal({
 }
 
 // ─── MAIN COMPONENT ────────────────────────────────────────────────────────────
-export default function TradingGame() {
-  const [balance, setBalance] = useState(10000);
+// userId is passed as a prop from StockSimulator — no need to fetch it here
+export default function TradingGame({ userId }) {
+  console.log("🎮 TradingGame rendered with userId:", userId); 
+  
+  if (!userId) {
+    console.warn("⚠️  WARNING: TradingGame received undefined or null userId!");
+    console.warn("⚠️  Database operations will not work without a valid userId");
+  } else {
+    console.log("✅ Valid userId received in TradingGame:", userId);
+  }
+  
+  const [balance, setBalance] = useState(STARTING_BALANCE);
   const [positions, setPositions] = useState([]);
+  const [isTrading, setIsTrading] = useState(false);
+  const [dbLoading, setDbLoading] = useState(true);
+  const [tradeError, setTradeError] = useState(null);
+
   const [stocks, setStocks] = useState(
     COMPANIES.map((c) => ({
       ...c,
@@ -339,6 +364,69 @@ export default function TradingGame() {
     shares: 1,
   });
 
+  // ─── LOAD BALANCE + POSITIONS FROM SUPABASE ────────────────────────────────
+  const loadUserData = useCallback(async () => {
+    // if not logged in, skip DB fetch and just use default balance
+    if (!userId) {
+      console.log("No userId provided, using default balance");
+      setDbLoading(false);
+      return;
+    }
+
+    console.log("Loading user data for userId:", userId);
+
+    try {
+      // fetch balance
+      console.log("Fetching trading_accounts for userId:", userId);
+      const { data: account, error: accountError } = await supabase
+        .from("trading_accounts")
+        .select("balance")
+        .eq("user_id", userId)
+        .single();
+
+      if (accountError) {
+        console.error("trading_accounts error:", accountError.message, accountError);
+      } else if (account) {
+        console.log("Account balance fetched:", account.balance);
+        setBalance(Number(account.balance));
+      } else {
+        console.log("No account found for user, using default balance");
+      }
+
+      // fetch positions
+      console.log("Fetching positions for userId:", userId);
+      const { data: userPositions, error: posError } = await supabase
+        .from("positions")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (posError) {
+        console.error("positions error:", posError.message, posError);
+      } else if (userPositions && userPositions.length > 0) {
+        console.log("Positions fetched:", userPositions);
+        setPositions(
+          userPositions.map((p) => ({
+            stockId: p.symbol,
+            shares: Number(p.shares),
+            boughtAtPrice: Number(p.avg_cost_basis),
+          })),
+        );
+      } else {
+        console.log("No positions found for user");
+      }
+    } catch (err) {
+      console.error("loadUserData failed:", err);
+    } finally {
+      setDbLoading(false);
+    }
+  }, [userId]);
+
+  // load on mount — userId comes from parent so this is reliable
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
+
+  // ─── MARKET DATA ───────────────────────────────────────────────────────────
   const refreshAll = useCallback(async (preserveHistory = false) => {
     setLoadingSymbols(new Set(COMPANIES.map((c) => c.id)));
 
@@ -356,10 +444,6 @@ export default function TradingGame() {
         const candleData =
           historyResult.status === "fulfilled" ? historyResult.value : null;
 
-        // Priority order:
-        // 1. Real 90-day candle history (best case)
-        // 2. Fallback sparkline from quote fields (when candles return null/empty)
-        // 3. null sentinel (preserveHistory=true — leave existing priceHistory untouched)
         let history;
         if (preserveHistory) {
           history = null;
@@ -403,61 +487,105 @@ export default function TradingGame() {
     return () => clearInterval(interval);
   }, [refreshAll]);
 
+  // ─── PORTFOLIO CALCULATIONS ────────────────────────────────────────────────
   const portfolioValue = positions.reduce((sum, pos) => {
     const stock = stocks.find((s) => s.id === pos.stockId);
     return sum + (stock?.current ? stock.current * pos.shares : 0);
   }, 0);
   const totalValue = balance + portfolioValue;
-  const STARTING_BALANCE = 10000;
   const profitLoss = totalValue - STARTING_BALANCE;
   const profitLossPercent = (profitLoss / STARTING_BALANCE) * 100;
 
-  const handleBuy = (stockId) =>
+  // ─── TRADE HANDLERS ────────────────────────────────────────────────────────
+  const handleBuy = (stockId) => {
+    setTradeError(null);
     setTradeDialog({ isOpen: true, type: "BUY", stockId, shares: 1 });
+  };
+
   const handleSell = (stockId) => {
+    setTradeError(null);
     const position = positions.find((p) => p.stockId === stockId);
     if (position)
       setTradeDialog({ isOpen: true, type: "SELL", stockId, shares: 1 });
   };
 
-  const confirmTrade = () => {
+  const confirmTrade = async () => {
     const stock = stocks.find((s) => s.id === tradeDialog.stockId);
-    const { type, shares, stockId } = tradeDialog;
+    const { type, shares } = tradeDialog;
 
-    if (type === "BUY") {
-      const cost = stock.current * shares;
-      if (cost > balance) return;
-      setBalance((b) => b - cost);
-      setPositions((prev) => {
-        const existing = prev.find((p) => p.stockId === stockId);
-        if (existing) {
-          return prev.map((p) =>
-            p.stockId === stockId
-              ? {
-                  ...p,
-                  shares: p.shares + shares,
-                  boughtAtPrice:
-                    (p.boughtAtPrice * p.shares + stock.current * shares) /
-                    (p.shares + shares),
-                }
-              : p,
-          );
-        }
-        return [...prev, { stockId, shares, boughtAtPrice: stock.current }];
-      });
-    } else {
-      const proceeds = stock.current * shares;
-      setBalance((b) => b + proceeds);
-      setPositions((prev) =>
-        prev
-          .map((p) =>
-            p.stockId === stockId ? { ...p, shares: p.shares - shares } : p,
-          )
-          .filter((p) => p.shares > 0),
-      );
+    console.log("Confirming trade:", { type, symbol: stock?.symbol, shares, userId });
+
+    // if not logged in — still allow playing but warn
+    if (!userId) {
+      console.warn("User not logged in - trade will not be saved");
+      setTradeError("You are not logged in. Trades will not be saved.");
+      return;
     }
 
-    setTradeDialog({ isOpen: false, type: "BUY", stockId: null, shares: 1 });
+    setIsTrading(true);
+    setTradeError(null);
+
+    try {
+      console.log("Calling execute_trade RPC with:", {
+        p_user_id: userId,
+        p_symbol: stock.symbol,
+        p_side: type.toLowerCase(),
+        p_shares: shares,
+        p_price: stock.current,
+      });
+
+      const { data, error } = await supabase.rpc("execute_trade", {
+        p_user_id: userId,
+        p_symbol: stock.symbol,
+        p_side: type.toLowerCase(),
+        p_shares: shares,
+        p_price: stock.current,
+      });
+
+      // log for debugging — remove once confirmed working
+      console.log("execute_trade result:", { data, error });
+
+      if (error) {
+        console.error("RPC error:", error);
+        setTradeError(error.message || "Trade failed");
+        return;
+      }
+
+      console.log("Trade executed successfully");
+
+      // update balance from DB response
+      if (data?.balance !== undefined) {
+        console.log("Updating balance to:", data.balance);
+        setBalance(Number(data.balance));
+      }
+
+      // refresh positions from DB
+      console.log("Refreshing positions from database");
+      const { data: updatedPositions, error: posError } = await supabase
+        .from("positions")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (posError) {
+        console.error("positions refresh error:", posError.message, posError);
+      } else {
+        console.log("Positions refreshed:", updatedPositions);
+        setPositions(
+          (updatedPositions ?? []).map((p) => ({
+            stockId: p.symbol,
+            shares: Number(p.shares),
+            boughtAtPrice: Number(p.avg_cost_basis),
+          })),
+        );
+      }
+
+      setTradeDialog({ isOpen: false, type: "BUY", stockId: null, shares: 1 });
+    } catch (err) {
+      console.error("Trade error:", err);
+      setTradeError("Something went wrong. Please try again.");
+    } finally {
+      setIsTrading(false);
+    }
   };
 
   const activeStock = stocks.find((s) => s.id === tradeDialog.stockId);
@@ -465,8 +593,20 @@ export default function TradingGame() {
     (p) => p.stockId === tradeDialog.stockId,
   );
 
+  // ─── LOADING STATE ─────────────────────────────────────────────────────────
+  if (dbLoading) {
+    return (
+      <div className="flex items-center justify-center h-64 text-gray-400">
+        <RefreshCw className="w-6 h-6 animate-spin mr-3" />
+        <span>Loading your portfolio…</span>
+      </div>
+    );
+  }
+
+  // ─── RENDER ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-8 p-4">
+      {/* connection status */}
       <div className="max-w-4xl mx-auto flex items-center justify-between text-sm text-gray-500">
         <div className="flex items-center gap-2">
           {apiConnected === null ? (
@@ -491,6 +631,7 @@ export default function TradingGame() {
         )}
       </div>
 
+      {/* balance cards */}
       <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
         <div className="bg-blue-600 text-white rounded-2xl p-6 shadow-lg">
           <div className="flex items-center gap-2 mb-1">
@@ -525,6 +666,7 @@ export default function TradingGame() {
         </div>
       </div>
 
+      {/* stock cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {stocks.map((stock) => {
           const position = positions.find((p) => p.stockId === stock.id);
@@ -541,6 +683,17 @@ export default function TradingGame() {
         })}
       </div>
 
+      {/* error toast */}
+      {tradeError && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-red-600 text-white px-5 py-3 rounded-xl shadow-lg text-sm z-50 cursor-pointer"
+          onClick={() => setTradeError(null)}
+        >
+          ⚠ {tradeError} · click to dismiss
+        </div>
+      )}
+
+      {/* trade modal */}
       {tradeDialog.isOpen && activeStock && (
         <TradeModal
           type={tradeDialog.type}
@@ -548,18 +701,20 @@ export default function TradingGame() {
           shares={tradeDialog.shares}
           balance={balance}
           position={activePosition}
+          isTrading={isTrading}
           onSharesChange={(n) =>
             setTradeDialog((prev) => ({ ...prev, shares: n }))
           }
           onConfirm={confirmTrade}
-          onCancel={() =>
+          onCancel={() => {
+            setTradeError(null);
             setTradeDialog({
               isOpen: false,
               type: "BUY",
               stockId: null,
               shares: 1,
-            })
-          }
+            });
+          }}
         />
       )}
     </div>
